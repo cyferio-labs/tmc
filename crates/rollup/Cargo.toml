@@ -64,7 +64,8 @@ sov-test-utils = { workspace = true }
 futures = { version = "0.3", default-features = false }
 
 [features]
-default = ["mock_da"]
+#default = ["mock_da"]
+default = ["sui_da"]                   # set mock_da as the default feature
 mock_da = ["sov-mock-da"]
 celestia_da = ["sov-celestia-adapter"]
 
