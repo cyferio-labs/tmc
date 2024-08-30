@@ -839,6 +839,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4c7f02d4ea65f2c1853089ffd8d2787bdbc63de2f0d29dedbcf8ccdfa0ccd4cf"
 
 [[package]]
+name = "base58"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6107fe1be6682a68940da878d9e9f5e90ca5745b3dec9fd1bb393c8777d4f581"
+
+[[package]]
 name = "base64"
 version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6863,7 +6869,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "18bec9b0adc4eba778b33684b7ba3e7137789434769ee3ce3930463ef904cfca"
 dependencies = [
  "anyhow",
- "itertools 0.12.1",
+ "itertools 0.13.0",
  "proc-macro2 1.0.86",
  "quote 1.0.36",
  "syn 2.0.72",
@@ -9554,6 +9560,7 @@ version = "0.3.0"
 dependencies = [
  "anyhow",
  "async-trait",
+ "base58",
  "bcs",
  "borsh",
  "bytes",

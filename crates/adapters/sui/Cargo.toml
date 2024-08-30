@@ -39,6 +39,7 @@ reqwest = { workspace = true, features = [
     "rustls-tls",
     "json",
 ], default-features = false, optional = true }
+base58 = "0.2"
 
 
 [[bin]]

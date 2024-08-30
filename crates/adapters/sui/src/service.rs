@@ -18,6 +18,9 @@ use sov_rollup_interface::services::da::{DaService, MaybeRetryable};
 use std::sync::Arc;
 use sui_json_rpc_types::{Checkpoint, EventFilter, SuiEvent, SuiTransactionBlockResponseOptions};
 use sui_sdk::{SuiClient, SuiClientBuilder};
+use serde_json::Value;
+use anyhow::anyhow;
+use base58::FromBase58;
 
 /// Runtime configuration for the DA service
 #[derive(Clone, PartialEq, serde::Deserialize, serde::Serialize)]
@@ -319,128 +322,29 @@ impl DaService for DaProvider {
             eprintln!("Failed to read response text: {}", e);
             MaybeRetryable::Transient(anyhow::Error::from(e))
         })?;
-
         println!("Response content------------: {}", response_text);
-        let sui_hash: SuiHash = SuiHash::try_from(0u64).unwrap();
-        Ok(sui_hash)
+        let json: Value = serde_json::from_str(&response_text).map_err(|e| {
+            eprintln!("Failed to parse JSON: {}", e);
+            MaybeRetryable::Transient(anyhow::Error::from(e))
+        })?;
 
-        // let sui_client = SuiClientBuilder::default()
-        //     .build_testnet()
-        //     .await
-        //     .map_err(|e| MaybeRetryable::Transient(anyhow::Error::from(e)))?;
-        //
-        // let private_key_str =
-        //     "suiprivkey1qr78zgu2cwcpdma2t50xrsx04z5ekma0tnjyfvl69rp0mdv996q5xkn5wu6";
-        //
-        // let sui_keypair =
-        //     SuiKeyPair::decode(private_key_str).map_err(|e| anyhow!("解码失败: {:?}", e))?;
-        //
-        // // 确保是 Ed25519 类型
-        // let ed25519_keypair = if let SuiKeyPair::Ed25519(keypair) = sui_keypair {
-        //     keypair
-        // } else {
-        //     return Err(MaybeRetryable::Transient(anyhow::Error::msg(
-        //         "Invalid keypair type",
-        //     ))); // 显式返回错误
-        // };
-        //
-        // let pk = ed25519_keypair.public();
-        // println!("公钥: {:?}", pk);
-        //
-        // let sender = DaAddress::try_from(pk).unwrap();
-        // println!("Sender: {:?}", sender);
-        //
-        // println!("blob----------------------------------------------------------------------------------------------");
-        // println!("blob----------------------------------------------------------------------------------------------");
-        // println!("blob----------------------------------------------------------------------------------------------");
-        // println!("blob----------------------------------------------------------------------------------------------: {:?}", blob);
-        // // 获取 gas_coin
-        // // let gas_coin = sui_client
-        // //     .coin_read_api()
-        // //     .get_coins(sender, None, None, None)
-        // //     .await?
-        // //     .data
-        // //     .into_iter()
-        // //     .next()
-        // //     .ok_or_else(|| MaybeRetryable::Transient(anyhow::Error::msg("No coins found")))?;
-        // let gas_coin = sui_client
-        //     .coin_read_api()
-        //     .get_coins(sender, None, None, None)
-        //     .await
-        //     .map_err(|e| MaybeRetryable::Transient(anyhow::Error::from(e)))? // 显式处理错误
-        //     .data
-        //     .into_iter()
-        //     .next()
-        //     .ok_or_else(|| MaybeRetryable::Transient(anyhow::Error::msg("No coins found")))?; // 处理 Option 类型
-        //
-        // // 构建可编程交易
-        // let input_value = 10u64;
-        // let input_argument = CallArg::Pure(bcs::to_bytes(&input_value).unwrap());
-        //
-        // let mut builder = ProgrammableTransactionBuilder::new();
-        // builder.input(input_argument)?;
-        //
-        // let pkg_id = "0x883393ee444fb828aa0e977670cf233b0078b41d144e6208719557cb3888244d";
-        // let package = ObjectID::from_hex_literal(pkg_id).map_err(|e| anyhow!(e))?;
-        // let module = Identifier::new("hello_world").map_err(|e| anyhow!(e))?;
-        // let function = Identifier::new("hello_world").map_err(|e| anyhow!(e))?;
-        //
-        // builder.command(Command::MoveCall(Box::new(ProgrammableMoveCall {
-        //     package,
-        //     module,
-        //     function,
-        //     type_arguments: vec![],
-        //     arguments: vec![Argument::Input(0)],
-        // })));
-        // let ptb = builder.finish();
-        //
-        // let gas_budget = 10_000_000;
-        //
-        // // let gas_price = sui_client.read_api().get_reference_gas_price().await?;
-        //
-        // let gas_price = sui_client
-        //     .read_api()
-        //     .get_reference_gas_price()
-        //     .await
-        //     .map_err(|e| MaybeRetryable::Transient(anyhow::Error::from(e)))?;
-        //
-        // // 创建交易数据
-        // let tx_data = TransactionData::new_programmable(
-        //     sender,
-        //     vec![gas_coin.object_ref()],
-        //     ptb,
-        //     gas_budget,
-        //     gas_price,
-        // );
-        //
-        // // 计算需要签名的摘要
-        // let intent_msg = IntentMessage::new(Intent::sui_transaction(), tx_data);
-        // let raw_tx = bcs::to_bytes(&intent_msg).expect("bcs should not fail");
-        // let mut hasher = sui_types::crypto::DefaultHash::default();
-        // hasher.update(raw_tx.clone());
-        // let digest = hasher.finalize().digest;
-        // let sui_sig = ed25519_keypair.sign(&digest);
-        //
-        // println!("Executing the transaction...");
-        // let transaction_response = sui_client
-        //     .quorum_driver_api()
-        //     .execute_transaction_block(
-        //         sui_types::transaction::Transaction::from_generic_sig_data(
-        //             intent_msg.value,
-        //             vec![GenericSignature::Signature(sui_sig)],
-        //         ),
-        //         SuiTransactionBlockResponseOptions::default(),
-        //         None,
-        //     )
-        //     .await
-        //     .map_err(|e| MaybeRetryable::Transient(anyhow::Error::from(e)))?; // 显式处理错误
-        //
-        // println!(
-        //     "Transaction executed. Transaction digest: {}",
-        //     transaction_response.digest.base58_encode()
-        // );
-        // println!("{}", transaction_response);
-        // Ok(())
+        println!("Response json------------: {}", json);
+        let tx_digest = json["alreadyCertified"]["event"]["txDigest"]
+            .as_str()
+            .ok_or_else(|| anyhow::anyhow!("Missing txDigest"))?; // 使用 anyhow 创建错误
+        println!("Response tx_digest------------: {}", tx_digest);
+
+        let bytes = tx_digest.from_base58().map_err(|e| {
+            anyhow!("Failed to decode Base58: {:?}", e)
+        })?;
+
+        let hash: [u8; 32] = bytes.as_slice().try_into().map_err(|_| {
+            anyhow!("Decoded bytes must have length 32, but it has {}", bytes.len())
+        })?;
+
+        let sui_hash = SuiHash(hash);
+        println!("Extracted SuiHash: {:?}", sui_hash);
+        Ok(sui_hash)
     }
 
     async fn send_aggregated_zk_proof(
@@ -448,7 +352,60 @@ impl DaService for DaProvider {
         _aggregated_proof_data: &[u8],
         _fee: Self::Fee,
     ) -> Result<DaBlobHash<Self::Spec>, Self::Error> {
-        let sui_hash: SuiHash = SuiHash::try_from(0u64).unwrap();
+        let publisher = "https://publisher-devnet.walrus.space"; // 替换为实际的 URL
+        let endpoint = format!("{}/v1/store", publisher);
+
+        // 使用 from_utf8_lossy 处理无效 UTF-8
+        let data = String::from_utf8_lossy(aggregated_proof_data).to_string();
+
+        // 如果 API 需要 JSON 格式，使用 json! 创建请求体
+        let json_data = json!({
+            "data": data
+        });
+
+        println!("json_data------------{:?}", json_data);
+
+        let client = Client::new();
+        let response = client
+            .put(&endpoint)
+            .json(&json_data) // 使用 JSON 格式的请求体
+            .send()
+            .await
+            .map_err(|e| MaybeRetryable::Transient(anyhow::Error::from(e)))?;
+
+        // 检查响应状态
+        if response.status().is_success() {
+            println!("Request was successful!");
+        } else {
+            eprintln!("Failed to send request: {}", response.status());
+        }
+
+        let response_text = response.text().await.map_err(|e| {
+            eprintln!("Failed to read response text: {}", e);
+            MaybeRetryable::Transient(anyhow::Error::from(e))
+        })?;
+        println!("Response content------------: {}", response_text);
+        let json: Value = serde_json::from_str(&response_text).map_err(|e| {
+            eprintln!("Failed to parse JSON: {}", e);
+            MaybeRetryable::Transient(anyhow::Error::from(e))
+        })?;
+
+        println!("Response json------------: {}", json);
+        let tx_digest = json["alreadyCertified"]["event"]["txDigest"]
+            .as_str()
+            .ok_or_else(|| anyhow::anyhow!("Missing txDigest"))?; // 使用 anyhow 创建错误
+        println!("Response tx_digest------------: {}", tx_digest);
+
+        let bytes = tx_digest.from_base58().map_err(|e| {
+            anyhow!("Failed to decode Base58: {:?}", e)
+        })?;
+
+        let hash: [u8; 32] = bytes.as_slice().try_into().map_err(|_| {
+            anyhow!("Decoded bytes must have length 32, but it has {}", bytes.len())
+        })?;
+
+        let sui_hash = SuiHash(hash);
+        println!("Extracted SuiHash: {:?}", sui_hash);
         Ok(sui_hash)
     }
 

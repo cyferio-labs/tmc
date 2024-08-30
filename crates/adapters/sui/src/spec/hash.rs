@@ -3,6 +3,7 @@ use sov_rollup_interface::common::HexHash;
 use sov_rollup_interface::da::BlockHashTrait;
 use std::fmt::{Debug, Formatter};
 use crate::spec::block::u64_to_bytes;
+use anyhow::anyhow;
 
 #[derive(
     Clone,
@@ -50,6 +51,19 @@ impl TryFrom<Vec<u8>> for SuiHash {
     }
 }
 
+impl TryFrom<&str> for SuiHash {
+    type Error = anyhow::Error;
+
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        let bytes = hex::decode(value).map_err(|e| {
+            anyhow!("Failed to decode hex string: {}", e)
+        })?;
+        let hash: [u8; 32] = bytes.as_slice().try_into().map_err(|_| {
+            anyhow!("Decoded bytes should have length 32, but it has {}", bytes.len())
+        })?;
+        Ok(SuiHash(hash))
+    }
+}
 impl TryFrom<u64> for SuiHash {
     type Error = anyhow::Error;
 
