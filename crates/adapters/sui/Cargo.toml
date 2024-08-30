@@ -1,0 +1,51 @@
+[package]
+name = "sov-sui-da"
+version = "0.3.0"
+edition = "2021"
+resolver = "2"
+
+[dependencies]
+sui_sdk = { git = "https://github.com/mystenlabs/sui", package = "sui-sdk" }
+fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "5f2c63266a065996d53f98156f0412782b468597" }
+sui-json-rpc-types = { git = "https://github.com/mystenlabs/sui" }
+sui-types = { git = "https://github.com/mystenlabs/sui" }
+tokio = { version = "1.2", features = ["full"] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = "1.0"
+schemars = "0.8.21"
+primitive-types = { version = "0.12.2", features = ["serde"] }
+bytes = { version = "1.2.1", features = ["serde"] }
+bcs = "0.1.4"
+hex = { workspace = true }
+thiserror = { workspace = true }
+borsh = { workspace = true }
+tracing = { workspace = true }
+shared-crypto = { git = "https://github.com/mystenlabs/sui" }
+derive_more = { workspace = true, features = ["from", "into"] }
+futures = { version = "0.3", default-features = false }
+sp-keyring = { version = "24", optional = true }
+sp-core = { version = "21", optional = true }
+sea-orm = { version = "0.12", features = [
+    "sqlx-sqlite",
+    "runtime-tokio-rustls",
+    "macros",
+    "with-chrono",
+], default-features = false, optional = true }
+async-trait = { workspace = true }
+sha2 = { workspace = true }
+sov-rollup-interface = { workspace = true }
+reqwest = { workspace = true, features = [
+    "rustls-tls",
+    "json",
+], default-features = false, optional = true }
+
+
+[[bin]]
+name = "test"
+path = "src/main.rs"
+
+[features]
+default = []
+native = ["dep:sea-orm", "dep:reqwest", "sov-rollup-interface/native"]
+postgres = ["native", "sea-orm/sqlx-postgres"]
