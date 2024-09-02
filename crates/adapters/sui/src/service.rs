@@ -352,60 +352,41 @@ impl DaService for DaProvider {
         _aggregated_proof_data: &[u8],
         _fee: Self::Fee,
     ) -> Result<DaBlobHash<Self::Spec>, Self::Error> {
-        let publisher = "https://publisher-devnet.walrus.space"; // 替换为实际的 URL
-        let endpoint = format!("{}/v1/store", publisher);
-
-        // 使用 from_utf8_lossy 处理无效 UTF-8
-        let data = String::from_utf8_lossy(aggregated_proof_data).to_string();
-
-        // 如果 API 需要 JSON 格式，使用 json! 创建请求体
-        let json_data = json!({
-            "data": data
-        });
-
-        println!("json_data------------{:?}", json_data);
-
-        let client = Client::new();
-        let response = client
-            .put(&endpoint)
-            .json(&json_data) // 使用 JSON 格式的请求体
-            .send()
-            .await
-            .map_err(|e| MaybeRetryable::Transient(anyhow::Error::from(e)))?;
-
-        // 检查响应状态
-        if response.status().is_success() {
-            println!("Request was successful!");
-        } else {
-            eprintln!("Failed to send request: {}", response.status());
-        }
-
-        let response_text = response.text().await.map_err(|e| {
-            eprintln!("Failed to read response text: {}", e);
-            MaybeRetryable::Transient(anyhow::Error::from(e))
-        })?;
-        println!("Response content------------: {}", response_text);
-        let json: Value = serde_json::from_str(&response_text).map_err(|e| {
-            eprintln!("Failed to parse JSON: {}", e);
-            MaybeRetryable::Transient(anyhow::Error::from(e))
-        })?;
-
-        println!("Response json------------: {}", json);
-        let tx_digest = json["alreadyCertified"]["event"]["txDigest"]
-            .as_str()
-            .ok_or_else(|| anyhow::anyhow!("Missing txDigest"))?; // 使用 anyhow 创建错误
-        println!("Response tx_digest------------: {}", tx_digest);
-
-        let bytes = tx_digest.from_base58().map_err(|e| {
-            anyhow!("Failed to decode Base58: {:?}", e)
-        })?;
-
-        let hash: [u8; 32] = bytes.as_slice().try_into().map_err(|_| {
-            anyhow!("Decoded bytes must have length 32, but it has {}", bytes.len())
-        })?;
-
-        let sui_hash = SuiHash(hash);
-        println!("Extracted SuiHash: {:?}", sui_hash);
+        // let publisher = "https://publisher-devnet.walrus.space"; // 替换为实际的 URL
+        // let endpoint = format!("{}/v1/store", publisher);
+        //
+        // // 使用 from_utf8_lossy 处理无效 UTF-8
+        // let data = String::from_utf8_lossy(aggregated_proof_data).to_string();
+        //
+        // // 如果 API 需要 JSON 格式，使用 json! 创建请求体
+        // let json_data = json!({
+        //     "data": data
+        // });
+        //
+        // println!("json_data------------{:?}", json_data);
+        //
+        // let client = Client::new();
+        // let response = client
+        //     .put(&endpoint)
+        //     .json(&json_data) // 使用 JSON 格式的请求体
+        //     .send()
+        //     .await
+        //     .map_err(|e| MaybeRetryable::Transient(anyhow::Error::from(e)))?;
+        //
+        // // 检查响应状态
+        // if response.status().is_success() {
+        //     println!("Request was successful!");
+        // } else {
+        //     eprintln!("Failed to send request: {}", response.status());
+        // }
+        //
+        // let response_text = response.text().await.map_err(|e| {
+        //     eprintln!("Failed to read response text: {}", e);
+        //     MaybeRetryable::Transient(anyhow::Error::from(e))
+        // })?;
+        //
+        // println!("Response content------------: {}", response_text);
+        let sui_hash: SuiHash = SuiHash::try_from(0u64).unwrap();
         Ok(sui_hash)
     }
 
