@@ -18,6 +18,7 @@ sov-mock-zkvm = { workspace = true, features = ["native"] }
 tracing-appender = { workspace = true }
 sov-accounts = { workspace = true, features = ["native"] }
 sov-bank = { workspace = true, features = ["native"] }
+sov-bank-fhe = { workspace = true, features = ["native"] }
 sov-ledger-apis = { workspace = true }
 sov-sequencer-registry = { workspace = true, features = ["native"] }
 sov-modules-rollup-blueprint = { workspace = true }
