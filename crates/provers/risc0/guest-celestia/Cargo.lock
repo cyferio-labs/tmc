@@ -4519,7 +4519,7 @@ dependencies = [
 [[package]]
 name = "sov-db"
 version = "0.3.0"
-source = "git+ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
+source = "git+ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -4713,7 +4713,7 @@ dependencies = [
 [[package]]
 name = "sov-rest-utils"
 version = "0.3.0"
-source = "git+ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
+source = "git+ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
 dependencies = [
  "anyhow",
  "axum",

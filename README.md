@@ -1,5 +1,8 @@
 # Overview
 
+> [!NOTE]
+> Check tutorial section of [rollup starter for `sov_bank_fhe`](#rollup-starter-for-sov_bank_fhe)!
+
 This package is a convenient starting point for building a rollup using the Sovereign SDK:
 
 ## The repo structure:
