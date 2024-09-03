@@ -58,6 +58,8 @@ pub struct Runtime<S: Spec> {
     pub nonces: sov_nonces::Nonces<S>,
     /// The bank module is responsible for minting, transferring, and burning tokens
     pub bank: sov_bank::Bank<S>,
+    /// The fhe bank module is for confidential transactions
+    pub fhe_bank: sov_bank_fhe::Bank<S>,
     /// The sequencer registry module is responsible for authorizing users to sequencer rollup transactions
     pub sequencer_registry: sov_sequencer_registry::SequencerRegistry<S>,
     /// The Attester Incentives module.

@@ -77,9 +77,6 @@ stop: check-docker
 	@echo "Stopping local celestia network setup"
 	@$(compose_down)
 
-# clean up rollup data and stop the celestia network
-clean: stop clean-db
-
 # listen to celestia network logs
 compose-logs: check-docker
 	@echo "Showing celestia logs"
@@ -93,6 +90,9 @@ check-docker:
 # check if celestia network is running
 check-compose-running: check-docker
 	@$(compose_is_running)
+
+check-sov-cli:
+	@command -v $(SOV_CLI_REL_PATH) > /dev/null 2>&1 || { echo "sov-cli has not been build, run `make build`"; exit 1; }
 
 clean-db:
 	rm -rf ../../rollup-starter-data
@@ -122,3 +122,38 @@ test-create-token: build-sov-cli
 test-bank-supply-of:
 	curl -sS -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"bank_supplyOf","params":{"token_id":"token_1nyl0e0yweragfsatygt24zmd8jrr2vqtvdfptzjhxkguz2xxx3vs0y07u7"},"id":1}' http://127.0.0.1:12345
 
+get-fhe-public-key: 
+	curl -X POST -H "Content-Type: application/json" --data '{"jsonrpc":"2.0","method":"fheBank_FhePublicKey","params":[],"id":1}' http://127.0.0.1:12345
+
+test-fhe-create-token: check-sov-cli
+test-fhe-create-token:
+	$(SOV_CLI_REL_PATH) rpc set-url --rpc=http://127.0.0.1:12345 --rest-api=http://127.0.0.1:12346
+	$(SOV_CLI_REL_PATH) transactions import from-file fhe-bank --chain-id 4321 --max-fee 100000000 --path ../../test-data/requests/fhe/create_token.json
+	@echo "Submitting a batch"
+	$(SOV_CLI_REL_PATH) rpc submit-batch --wait-for-processing by-nickname DANGER__DO_NOT_USE_WITH_REAL_MONEY
+
+test-fhe-token-transfer: check-sov-cli
+test-fhe-token-transfer:
+	$(SOV_CLI_REL_PATH) rpc set-url --rpc=http://127.0.0.1:12345 --rest-api=http://127.0.0.1:12346
+	$(SOV_CLI_REL_PATH) transactions import from-file fhe-bank --chain-id 4321 --max-fee 100000000 --path ../../test-data/requests/fhe/transfer.json
+	@echo "Submitting a batch"
+	$(SOV_CLI_REL_PATH) rpc submit-batch --wait-for-processing by-nickname DANGER__DO_NOT_USE_WITH_REAL_MONEY
+
+test-fhe-mint-token: check-sov-cli
+test-fhe-mint-token:
+	$(SOV_CLI_REL_PATH) rpc set-url --rpc=http://127.0.0.1:12345 --rest-api=http://127.0.0.1:12346
+	$(SOV_CLI_REL_PATH) transactions import from-file fhe-bank --chain-id 4321 --max-fee 100000000 --path ../../test-data/requests/fhe/mint.json
+	@echo "Submitting a batch"
+	$(SOV_CLI_REL_PATH) rpc submit-batch --wait-for-processing by-nickname DANGER__DO_NOT_USE_WITH_REAL_MONEY
+
+test-fhe-bank-supply-of:
+	curl -sS -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"fheBank_supplyOf","params":{"token_id":"token_1p0cc94vkffzsyy8xdtmgu70h2lxg85zrqcns7dzaz2pqlt3w3ypq2duf6l"},"id":1}' http://127.0.0.1:12345
+
+test-fhe-bank-raw-supply-of:
+	curl -sS -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"fheBank_rawSupplyOf","params":{"token_id":"token_1p0cc94vkffzsyy8xdtmgu70h2lxg85zrqcns7dzaz2pqlt3w3ypq2duf6l"},"id":1}' http://127.0.0.1:12345
+
+test-fhe-user-balance-of:
+	curl -sS -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"fheBank_balanceOf","params":{"user_address":"sov1l6n2cku82yfqld30lanm2nfw43n2auc8clw7r5u5m6s7p8jrm4zqrr8r94", "token_id":"token_1p0cc94vkffzsyy8xdtmgu70h2lxg85zrqcns7dzaz2pqlt3w3ypq2duf6l"},"id":1}' http://127.0.0.1:12345
+
+test-fhe-user-raw-balance-of:
+	curl -sS -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"fheBank_rawBalanceOf","params":{"user_address":"sov1l6n2cku82yfqld30lanm2nfw43n2auc8clw7r5u5m6s7p8jrm4zqrr8r94", "token_id":"token_1p0cc94vkffzsyy8xdtmgu70h2lxg85zrqcns7dzaz2pqlt3w3ypq2duf6l"},"id":1}' http://127.0.0.1:12345

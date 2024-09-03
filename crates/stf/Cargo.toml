@@ -16,6 +16,7 @@ sov-nonces = { workspace = true }
 sov-bank = { workspace = true }
 sov-chain-state = { workspace = true }
 sov-blob-storage = { workspace = true }
+sov-bank-fhe = { workspace = true, features = ["native"] }
 sov-prover-incentives = { workspace = true }
 sov-attester-incentives = { workspace = true }
 sov-sequencer-registry = { workspace = true }
@@ -47,6 +48,7 @@ native = [
 	"sov-accounts/native",
 	"sov-attester-incentives/native",
 	"sov-bank/native",
+	"sov-bank-fhe/native",
 	"sov-capabilities/native",
 	"sov-chain-state/native",
 	"sov-blob-storage/native",

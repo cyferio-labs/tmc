@@ -5,6 +5,7 @@ use serde::de::DeserializeOwned;
 use sov_accounts::AccountConfig;
 use sov_attester_incentives::AttesterIncentivesConfig;
 use sov_bank::BankConfig;
+use sov_bank_fhe::BankConfig as BankFheConfig;
 use sov_chain_state::ChainStateConfig;
 use sov_modules_api::Spec;
 use sov_modules_stf_blueprint::Runtime as RuntimeTrait;
@@ -20,6 +21,8 @@ pub struct GenesisPaths {
     pub accounts_genesis_path: PathBuf,
     /// Bank genesis path.
     pub bank_genesis_path: PathBuf,
+    /// Bank FHE genesis path.
+    pub bank_fhe_genesis_path: PathBuf,
     /// Sequencer Registry genesis path.
     pub sequencer_genesis_path: PathBuf,
     /// Attester Incentives genesis path.
@@ -40,6 +43,7 @@ impl GenesisPaths {
         Self {
             accounts_genesis_path: dir.as_ref().join("accounts.json"),
             bank_genesis_path: dir.as_ref().join("bank.json"),
+            bank_fhe_genesis_path: dir.as_ref().join("bank_fhe.json"),
             sequencer_genesis_path: dir.as_ref().join("sequencer_registry.json"),
             attester_incentives_genesis_path: dir.as_ref().join("attester_incentives.json"),
             prover_incentives_genesis_path: dir.as_ref().join("prover_incentives.json"),
@@ -56,6 +60,7 @@ pub fn create_genesis_config<S: Spec>(
     let accounts_config: AccountConfig<S> =
         read_genesis_json(&genesis_paths.accounts_genesis_path)?;
     let bank_config: BankConfig<S> = read_genesis_json(&genesis_paths.bank_genesis_path)?;
+    let bank_fhe_config: BankFheConfig<S> = read_json_file(&genesis_paths.bank_fhe_genesis_path)?;
     let sequencer_registry_config: SequencerConfig<S> =
         read_genesis_json(&genesis_paths.sequencer_genesis_path)?;
     let attester_incentives_config: AttesterIncentivesConfig<S> =
@@ -77,6 +82,7 @@ pub fn create_genesis_config<S: Spec>(
         accounts_config,
         nonces_config,
         bank_config,
+        bank_fhe_config,
         sequencer_registry_config,
         attester_incentives_config,
         prover_incentives_config,
