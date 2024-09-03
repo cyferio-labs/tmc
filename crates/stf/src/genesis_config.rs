@@ -3,6 +3,7 @@ use std::path::{Path, PathBuf};
 use anyhow::Context as _;
 use sov_accounts::AccountConfig;
 use sov_bank::BankConfig;
+use sov_bank_fhe::BankConfig as BankFheConfig;
 use sov_modules_api::{DaSpec, Spec};
 use sov_modules_stf_blueprint::Runtime as RuntimeTrait;
 use sov_prover_incentives::ProverIncentivesConfig;
@@ -18,6 +19,8 @@ pub struct GenesisPaths {
     pub accounts_genesis_path: PathBuf,
     /// Bank genesis path.
     pub bank_genesis_path: PathBuf,
+    /// Bank FHE genesis path.
+    pub bank_fhe_genesis_path: PathBuf,
     /// Sequencer Registry genesis path.
     pub sequencer_genesis_path: PathBuf,
     /// Prover Incentives genesis path.
@@ -47,6 +50,7 @@ impl GenesisPaths {
         Self {
             accounts_genesis_path: dir.as_ref().join("accounts.json"),
             bank_genesis_path: dir.as_ref().join("bank.json"),
+            bank_fhe_genesis_path: dir.as_ref().join("bank_fhe.json"),
             sequencer_genesis_path: dir.as_ref().join("sequencer_registry.json"),
             prover_incentives_genesis_path: dir.as_ref().join("prover_incentives.json"),
         }
@@ -71,6 +75,7 @@ pub fn create_genesis_config<S: Spec, Da: DaSpec>(
 ) -> anyhow::Result<<Runtime<S, Da> as RuntimeTrait<S, Da>>::GenesisConfig> {
     let accounts_config: AccountConfig<S> = read_json_file(&genesis_paths.accounts_genesis_path)?;
     let bank_config: BankConfig<S> = read_json_file(&genesis_paths.bank_genesis_path)?;
+    let bank_fhe_config: BankFheConfig<S> = read_json_file(&genesis_paths.bank_fhe_genesis_path)?;
     let sequencer_registry_config: SequencerConfig<S, Da> =
         read_json_file(&genesis_paths.sequencer_genesis_path)?;
     let prover_incentives_config: ProverIncentivesConfig<S> =
@@ -81,6 +86,7 @@ pub fn create_genesis_config<S: Spec, Da: DaSpec>(
         accounts_config,
         nonces_config,
         bank_config,
+        bank_fhe_config,
         sequencer_registry_config,
         prover_incentives_config,
     ))
