@@ -5,7 +5,8 @@ resolver = "2"
 members = [
     "crates/adapters/sui",
     "crates/rollup",
-    "crates/stf"
+    "crates/stf",
+    "crates/module-implementations/sov-bank-fhe",
 ]
 
 [workspace.package]
@@ -43,6 +44,9 @@ sov-capabilities = { git = "ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wi
 sov-test-utils = { git = "ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
 stf-starter = { path = "./crates/stf" }
 
+# fhe modules
+sov-bank-fhe = { path = "./crates/module-implementations/sov-bank-fhe"}
+
 axum = { version = "0.7", default-features = false }
 serde = { version = "1.0.192", features = ["derive", "rc"] }
 serde_json = { version = "1.0" }
@@ -60,6 +64,7 @@ tracing-appender = "0.2"
 tokio = { version = "1", features = ["full"] }
 tempfile = "3.5"
 jsonrpsee = { version = "0.24.2", features = ["jsonrpsee-types"] }
+schemars = "0.8.21"
 
 risc0-build = "1.0.5"
 
@@ -70,3 +75,7 @@ reqwest = { version = "0.12", features = [
     "rustls-tls",
 ], default-features = false }
 thiserror = "1.0.50"
+
+# FHE dependencies
+tfhe = { version = "0.7.2", features = ["boolean", "shortint", "integer", "aarch64-unix"] }
+bincode = "1.3.3"
