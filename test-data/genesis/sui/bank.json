@@ -25,10 +25,15 @@
       [
         "sov16wxfprgt9lhvd097kes7e2v4juz5rn8jrzt7477cp9dw0qldydas769lvu",
         1000000000
+      ],
+      [
+        "sov1yaxcy28h27vq555p7npkj96y63gmuxcufyr30jwzyjvcjfuejhvqjkt5r4",
+        1000000000
       ]
     ],
     "authorized_minters": [
-      "sov1l6n2cku82yfqld30lanm2nfw43n2auc8clw7r5u5m6s7p8jrm4zqrr8r94"
+      "sov1l6n2cku82yfqld30lanm2nfw43n2auc8clw7r5u5m6s7p8jrm4zqrr8r94",
+      "sov1yaxcy28h27vq555p7npkj96y63gmuxcufyr30jwzyjvcjfuejhvqjkt5r4"
     ]
   },
   "tokens": []
