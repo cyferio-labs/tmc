@@ -21,6 +21,7 @@ fn main() {
     // get the root path and join with the key directory
     let root_path = env::current_dir().unwrap();
     let genesis_path = path::Path::new(&root_path).join("test-data/genesis/mock");
+    let sui_genesis_path = path::Path::new(&root_path).join("test-data/genesis/sui");
     let key_path = path::Path::new(&root_path).join("test-data/keys");
 
     // write the genesis file
@@ -29,10 +30,23 @@ fn main() {
         genesis_config.to_string(),
     )
     .unwrap();
+
     println!(
         "[Init] FHE Keys generated and serialized in {:?}\n[Init] Public key and server key are stored in {:?}",
         start.elapsed(),
         genesis_path.join("bank_fhe.json")
+    );
+
+    fs::write(
+        sui_genesis_path.join("bank_fhe.json"),
+        genesis_config.to_string(),
+    )
+        .unwrap();
+
+    println!(
+        "[Init] FHE Keys generated and serialized in {:?}\n[Init] Public key and server key are stored in {:?}",
+        start.elapsed(),
+        sui_genesis_path.join("bank_fhe.json")
     );
 
     // store the private key for debug usage
