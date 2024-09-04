@@ -146,7 +146,7 @@ impl<S: sov_modules_api::Spec> Bank<S> {
         self.transfer_from(sender, to, coins.clone(), state)
             .map(|response| {
                 // TODO: move this back into the body of transfer_from once we create a trait for StateAccessor + EventEmitter
-                // https://github.com/Sovereign-Labs/sovereign-sdk-wip/issues/168
+                // https://github.com/0xobelisk/sovereign-sdk-wip/issues/168
                 self.emit_event(
                     state,
                     Event::TokenTransferred {

@@ -16,6 +16,12 @@ fn main() {
     // get the root path and join with the key directory
     let root_path = env::current_dir().unwrap();
     let requests_path = path::Path::new(&root_path).join("test-data/requests/fhe/");
+
+    // create the directory if it doesn't exist
+    if !requests_path.exists() {
+        fs::create_dir_all(&requests_path).expect("Failed to create requests directory");
+    }
+
     let fhe_key_config_path =
         path::Path::new(&root_path).join("test-data/genesis/mock/bank_fhe.json");
 
