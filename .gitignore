@@ -7,3 +7,7 @@ docker/credentials/*
 !docker/credentials/bridge-0.key
 .keys
 crates/rollup/mock_da.sqlite
+
+test-data/requests/fhe/*
+test-data/genesis/mock/bank_fhe.json
+test-data/keys/private_key.json
