@@ -1,6 +1,6 @@
 //! The stf-rollup supports `sov-module` authenticator. To support other authentication schemes,
 //! you can check out how we support `EVM` authenticator here:
-//! https://github.com/Sovereign-Labs/sovereign-sdk-wip/blob/146d5c2c5fa07ab7bb59ba6b2e64690ac9b63830/examples/demo-rollup/stf/src/authentication.rs#L29-L32
+//! https://github.com/cyferio-labs/sovereign-sdk-wip/blob/146d5c2c5fa07ab7bb59ba6b2e64690ac9b63830/examples/demo-rollup/stf/src/authentication.rs#L29-L32
 use borsh::{BorshDeserialize, BorshSerialize};
 use serde::{Deserialize, Serialize};
 use std::marker::PhantomData;

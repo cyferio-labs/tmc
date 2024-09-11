@@ -1587,7 +1587,7 @@ checksum = "3c5e1a9a646d36c3599cd173a41282daf47c44583ad367b8e6837255952e5c67"
 [[package]]
 name = "sov-accounts"
 version = "0.3.0"
-source = "git+ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
+source = "git+ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
 dependencies = [
  "anyhow",
  "borsh",
@@ -1600,7 +1600,7 @@ dependencies = [
 [[package]]
 name = "sov-bank"
 version = "0.3.0"
-source = "git+ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
+source = "git+ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
 dependencies = [
  "anyhow",
  "borsh",
@@ -1615,7 +1615,7 @@ dependencies = [
 [[package]]
 name = "sov-blob-storage"
 version = "0.3.0"
-source = "git+ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
+source = "git+ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
 dependencies = [
  "anyhow",
  "borsh",
@@ -1631,7 +1631,7 @@ dependencies = [
 [[package]]
 name = "sov-capabilities"
 version = "0.3.0"
-source = "git+ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
+source = "git+ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
 dependencies = [
  "anyhow",
  "sov-accounts",
@@ -1646,7 +1646,7 @@ dependencies = [
 [[package]]
 name = "sov-chain-state"
 version = "0.3.0"
-source = "git+ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
+source = "git+ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
 dependencies = [
  "anyhow",
  "borsh",
@@ -1661,7 +1661,7 @@ dependencies = [
 [[package]]
 name = "sov-kernels"
 version = "0.3.0"
-source = "git+ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
+source = "git+ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
 dependencies = [
  "anyhow",
  "sov-blob-storage",
@@ -1673,7 +1673,7 @@ dependencies = [
 [[package]]
 name = "sov-metrics"
 version = "0.3.0"
-source = "git+ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
+source = "git+ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
 dependencies = [
  "prometheus",
 ]
@@ -1681,7 +1681,7 @@ dependencies = [
 [[package]]
 name = "sov-mock-da"
 version = "0.3.0"
-source = "git+ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
+source = "git+ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1699,7 +1699,7 @@ dependencies = [
 [[package]]
 name = "sov-mock-zkvm"
 version = "0.3.0"
-source = "git+ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
+source = "git+ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
 dependencies = [
  "anyhow",
  "bincode",
@@ -1716,7 +1716,7 @@ dependencies = [
 [[package]]
 name = "sov-modules-api"
 version = "0.3.0"
-source = "git+ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
+source = "git+ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
 dependencies = [
  "anyhow",
  "bech32",
@@ -1739,7 +1739,7 @@ dependencies = [
 [[package]]
 name = "sov-modules-macros"
 version = "0.3.0"
-source = "git+ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
+source = "git+ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
 dependencies = [
  "anyhow",
  "bech32",
@@ -1759,7 +1759,7 @@ dependencies = [
 [[package]]
 name = "sov-modules-stf-blueprint"
 version = "0.3.0"
-source = "git+ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
+source = "git+ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
 dependencies = [
  "anyhow",
  "borsh",
@@ -1775,7 +1775,7 @@ dependencies = [
 [[package]]
 name = "sov-nonces"
 version = "0.3.0"
-source = "git+ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
+source = "git+ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
 dependencies = [
  "anyhow",
  "borsh",
@@ -1787,7 +1787,7 @@ dependencies = [
 [[package]]
 name = "sov-prover-incentives"
 version = "0.3.0"
-source = "git+ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
+source = "git+ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
 dependencies = [
  "anyhow",
  "borsh",
@@ -1803,7 +1803,7 @@ dependencies = [
 [[package]]
 name = "sov-risc0-adapter"
 version = "0.3.0"
-source = "git+ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
+source = "git+ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
 dependencies = [
  "anyhow",
  "bincode",
@@ -1823,7 +1823,7 @@ dependencies = [
 [[package]]
 name = "sov-rollup-interface"
 version = "0.3.0"
-source = "git+ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
+source = "git+ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1841,7 +1841,7 @@ dependencies = [
 [[package]]
 name = "sov-sequencer-registry"
 version = "0.3.0"
-source = "git+ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
+source = "git+ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
 dependencies = [
  "anyhow",
  "borsh",
@@ -1856,7 +1856,7 @@ dependencies = [
 [[package]]
 name = "sov-state"
 version = "0.3.0"
-source = "git+ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
+source = "git+ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
 dependencies = [
  "anyhow",
  "bcs",
@@ -1875,7 +1875,7 @@ dependencies = [
 [[package]]
 name = "sov-stf-runner"
 version = "0.3.0"
-source = "git+ssh://git@github.com/Sovereign-Labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
+source = "git+ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git?rev=8cf5b279d5f35806a787e4862ae9745d470f38c9#8cf5b279d5f35806a787e4862ae9745d470f38c9"
 dependencies = [
  "anyhow",
  "borsh",

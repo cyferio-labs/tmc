@@ -9,7 +9,7 @@ This package is a convenient starting point for building a rollup using the Sove
 - `crates/rollup`: This crate runs the `STF` and offers additional full-node functionalities.
 
 (!) Note for using WIP repo.
-This repo utilizes private [Sovereign SDK repo](https://github.com/Sovereign-Labs/sovereign-sdk-wip) and default cargo needs this environment variable to use an SSH key:
+This repo utilizes private [Sovereign SDK repo](https://github.com/cyferio-labs/sovereign-sdk-wip) and default cargo needs this environment variable to use an SSH key:
 
 ```
 export CARGO_NET_GIT_FETCH_WITH_CLI=true
@@ -178,4 +178,4 @@ For the transaction to be processed successfully, you have to ensure that the se
 
 To be able to execute most simple transactions, the transaction sender should have about `1_000_000_000` tokens on their account and the sequencer should have staked `100_000_000` tokens in the registry.
 
-More details can be found in the Sovereign book [available here](https://github.com/Sovereign-Labs/sovereign-book).
+More details can be found in the Sovereign book [available here](https://github.com/cyferio-labs/sovereign-book).

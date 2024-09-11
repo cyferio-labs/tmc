@@ -4,7 +4,7 @@
 cluster: testnet
 
 # Github organization name
-rollup_org_name: "Sovereign-Labs"
+rollup_org_name: "cyferio-labs"
 # Github repository name
 rollup_repo_name: "sov-rollup-starter-wip"
 # Local directory to clone the GitHub repo into

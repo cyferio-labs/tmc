@@ -15,7 +15,7 @@ update_revision() {
 
     if [ -f "$file" ]; then
         # Use sed to find and replace the revision in the specified git URL line
-        sed -i "" -E "s#(git = \"ssh://git@github.com/Sovereign-Labs/sovereign-sdk[^\"]*\", rev = \")[^\"]*(\")#\1$NEW_REV\2#g" "$file"
+        sed -i "" -E "s#(git = \"ssh://git@github.com/cyferio-labs/sovereign-sdk[^\"]*\", rev = \")[^\"]*(\")#\1$NEW_REV\2#g" "$file"
 
         if [ $? -eq 0 ]; then
             echo "Updated $file successfully."
