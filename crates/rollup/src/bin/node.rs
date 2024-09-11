@@ -10,10 +10,15 @@ use sov_modules_rollup_blueprint::FullNodeBlueprint;
 use sov_modules_rollup_blueprint::Rollup;
 use sov_rollup_interface::execution_mode::Native;
 use sov_rollup_interface::node::da::DaServiceWithRetries;
+#[cfg(feature = "sui_da")]
+use sov_sui_da::service::SuiConfig;
+
 #[cfg(feature = "celestia_da")]
 use sov_rollup_starter::celestia_rollup::CelestiaRollup;
 #[cfg(feature = "mock_da")]
 use sov_rollup_starter::mock_rollup::MockRollup;
+#[cfg(feature = "sui_da")]
+use sov_rollup_starter::sui_rollup::SuiRollup;
 use sov_stf_runner::processes::RollupProverConfig;
 use sov_stf_runner::{from_toml_path, RollupConfig};
 use std::env;
@@ -29,8 +34,18 @@ use sov_modules_api::Address;
 #[cfg(all(feature = "mock_da", feature = "celestia_da"))]
 compile_error!("Both mock_da and celestia_da are enabled, but only one should be.");
 
-#[cfg(all(not(feature = "mock_da"), not(feature = "celestia_da")))]
-compile_error!("Neither mock_da and celestia_da are enabled, but only one should be.");
+#[cfg(all(feature = "mock_da", feature = "sui_da"))]
+compile_error!("Both mock_da and sui_da are enabled, but only one should be.");
+
+#[cfg(all(feature = "celestia_da", feature = "sui_da"))]
+compile_error!("Both celestia_da and sui_da are enabled, but only one should be.");
+
+#[cfg(all(feature = "sui_da", not(feature = "mock_da")))]
+const DEFAULT_CONFIG_PATH: &str = "../../sui_rollup_config.toml";
+#[cfg(all(feature = "sui_da", not(feature = "mock_da")))]
+const DEFAULT_GENESIS_PATH: &str = "../../test-data/genesis/sui/";
+#[cfg(all(feature = "sui_da", not(feature = "mock_da")))]
+const DEFAULT_KERNEL_GENESIS_PATH: &str = "../../test-data/genesis/sui/chain_state.json";
 
 // config and genesis for mock da
 #[cfg(all(feature = "mock_da", not(feature = "celestia_da")))]
@@ -179,6 +194,30 @@ async fn new_rollup(
 
     let celestia_rollup = CelestiaRollup::default();
     celestia_rollup
+        .create_new_rollup(rt_genesis_paths, rollup_config, prover_config)
+        .await
+}
+
+#[cfg(all(feature = "sui_da", not(feature = "mock_da")))]
+async fn new_rollup(
+    rt_genesis_paths: &GenesisPaths,
+    rollup_config_path: &str,
+    prover_config: Option<RollupProverConfig>,
+) -> Result<Rollup<SuiRollup<Native>, Native>, anyhow::Error> {
+    tracing::info!("Starting Sui rollup with config {}", rollup_config_path);
+
+    println!("Current directory: {:?}", env::current_dir());
+    println!("Current directory: {:?}", rollup_config_path);
+    let rollup_config: RollupConfig<Address<Sha256>, DaServiceWithRetries<SuiConfig>> =
+        from_toml_path(rollup_config_path).with_context(|| {
+            format!(
+                "Failed to read rollup configuration from {}",
+                rollup_config_path
+            )
+        })?;
+
+    let sui_rollup = SuiRollup::default();
+    sui_rollup
         .create_new_rollup(rt_genesis_paths, rollup_config, prover_config)
         .await
 }
