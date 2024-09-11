@@ -41,7 +41,7 @@ fn main() {
         sui_genesis_path.join("bank_fhe.json"),
         genesis_config.to_string(),
     )
-        .unwrap();
+    .unwrap();
 
     println!(
         "[Init] FHE Keys generated and serialized in {:?}\n[Init] Public key and server key are stored in {:?}",

@@ -6,7 +6,7 @@ use sov_state::User;
 
 // FHE deps
 use bincode;
-use tfhe::{prelude::*, set_server_key, CompressedPublicKey, CompressedServerKey};
+use tfhe::{prelude::*, set_server_key, CompressedPublicKey, CudaServerKey};
 
 use crate::event::Event;
 use crate::mock_decryption;
@@ -93,7 +93,7 @@ impl<S: sov_modules_api::Spec> Bank<S> {
             bincode::deserialize::<CompressedPublicKey>(&self.fhe_public_key.get(state)?.unwrap())?
                 .decompress();
         let fhe_server_key =
-            bincode::deserialize::<CompressedServerKey>(&self.fhe_server_key.get(state)?.unwrap())?
+            bincode::deserialize::<CudaServerKey>(&self.fhe_server_key.get(state)?.unwrap())?
                 .decompress();
         set_server_key(fhe_server_key);
 
@@ -206,7 +206,7 @@ impl<S: sov_modules_api::Spec> Bank<S> {
         let fhe_public_key =
             bincode::deserialize::<CompressedPublicKey>(&self.fhe_public_key.get(state)?.unwrap())?
                 .decompress();
-        let fhe_server_key = bincode::deserialize::<CompressedServerKey>(
+        let fhe_server_key = bincode::deserialize::<CudaServerKey>(
             &self.fhe_server_key.get(state)?.unwrap().as_ref(),
         )?
         .decompress();
@@ -298,7 +298,7 @@ impl<S: sov_modules_api::Spec> Bank<S> {
             bincode::deserialize::<CompressedPublicKey>(&self.fhe_public_key.get(state)?.unwrap())?
                 .decompress();
         let fhe_server_key =
-            bincode::deserialize::<CompressedServerKey>(&self.fhe_server_key.get(state)?.unwrap())?
+            bincode::deserialize::<CudaServerKey>(&self.fhe_server_key.get(state)?.unwrap())?
                 .decompress();
         set_server_key(fhe_server_key);
 
@@ -335,7 +335,7 @@ impl<S: sov_modules_api::Spec> Bank<S> {
 
         // Fetch the fhe keys from state and set the server key in the environment
         let fhe_server_key =
-            bincode::deserialize::<CompressedServerKey>(&self.fhe_server_key.get(state)?.unwrap())
+            bincode::deserialize::<CudaServerKey>(&self.fhe_server_key.get(state)?.unwrap())
                 .unwrap()
                 .decompress();
         set_server_key(fhe_server_key);
@@ -384,7 +384,7 @@ impl<S: sov_modules_api::Spec> Bank<S> {
 
         // Fetch the fhe keys from state and set the server key in the environment
         let fhe_server_key =
-            bincode::deserialize::<CompressedServerKey>(&self.fhe_server_key.get(state)?.unwrap())
+            bincode::deserialize::<CudaServerKey>(&self.fhe_server_key.get(state)?.unwrap())
                 .unwrap()
                 .decompress();
         set_server_key(fhe_server_key);

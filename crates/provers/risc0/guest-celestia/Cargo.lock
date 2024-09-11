@@ -994,6 +994,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1462739cb27611015575c0c11df5df7601141071f07518d56fcc1be504cbec97"
 
 [[package]]
+name = "cmake"
+version = "0.1.51"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fb1e43aa7fd152b1f968787f7dbcdeb306d1867ff373c69955211876c053f91a"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "colorchoice"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5049,7 +5058,18 @@ dependencies = [
  "rayon",
  "serde",
  "sha3",
+ "tfhe-cuda-backend",
  "tfhe-versionable",
+]
+
+[[package]]
+name = "tfhe-cuda-backend"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fc18ed38810d8929567329e76a3a4bf943de7013de9f0d86ae3b7373f944a767"
+dependencies = [
+ "cmake",
+ "pkg-config",
 ]
 
 [[package]]

@@ -5,7 +5,7 @@ use std::{env, fs, path};
 
 use bincode;
 use sov_bank_fhe::fhe_key::FheKeyConfig;
-use tfhe::{prelude::*, set_server_key, CompressedPublicKey, CompressedServerKey, FheUint64};
+use tfhe::{prelude::*, set_server_key, CompressedPublicKey, CudaServerKey, FheUint64};
 
 // For timing
 use std::time::Instant;
@@ -34,7 +34,7 @@ fn main() {
         .decompress();
 
     // read and set the server key in this environment
-    let fhe_server_key = bincode::deserialize::<CompressedServerKey>(&config.fhe_server_key)
+    let fhe_server_key = bincode::deserialize::<CudaServerKey>(&config.fhe_server_key)
         .unwrap()
         .decompress();
     set_server_key(fhe_server_key);

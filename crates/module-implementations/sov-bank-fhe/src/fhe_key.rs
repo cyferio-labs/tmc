@@ -1,8 +1,9 @@
 use bincode;
 use serde::{Deserialize, Serialize};
 use tfhe::{
-    generate_keys, prelude::*, ClientKey, CompressedPublicKey, CompressedServerKey, ConfigBuilder,
-    PublicKey, ServerKey,
+    generate_keys, prelude::*,
+    shortint::parameters::PARAM_GPU_MULTI_BIT_MESSAGE_2_CARRY_2_GROUP_3_KS_PBS, ClientKey,
+    CompressedPublicKey, CompressedServerKey, ConfigBuilder, CudaServerKey, PublicKey, ServerKey,
 };
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
@@ -39,7 +40,7 @@ impl FheKeyGenConfig {
     pub fn serialize_keys(
         &mut self,
         client_key: &ClientKey,
-        server_key: &CompressedServerKey,
+        server_key: &CudaServerKey,
         public_key: &CompressedPublicKey,
     ) {
         let public_key_result = serialize_key(public_key, "public");
@@ -61,10 +62,9 @@ impl FheKeyGenConfig {
         self.private_key = private_key_result.unwrap_or_else(|_| Vec::new());
     }
 
-    pub fn deserialize_keys(&self) -> Option<(ClientKey, ServerKey, PublicKey)> {
+    pub fn deserialize_keys(&self) -> Option<(ClientKey, CudaServerKey, PublicKey)> {
         let client_key: ClientKey = deserialize_key(&self.private_key, "private")?;
-        let compressed_server_key: CompressedServerKey =
-            deserialize_key(&self.server_key, "server")?;
+        let compressed_server_key: CudaServerKey = deserialize_key(&self.server_key, "server")?;
         let compressed_public_key: CompressedPublicKey =
             deserialize_key(&self.public_key, "public")?;
 
@@ -82,9 +82,9 @@ impl FheKeyGenConfig {
 
 pub fn fhe_key_gen() -> FheKeyGenConfig {
     let config = ConfigBuilder::default().build();
-    let (client_key, _) = generate_keys(config);
+    let (client_key, _) = generate_keys(&config);
     let compressed_public_key = CompressedPublicKey::new(&client_key);
-    let compressed_server_key = CompressedServerKey::new(&client_key);
+    let gpu_server_key: CudaServerKey = CompressedServerKey::new(&client_key).decompress_to_gpu();
 
     let mut fhe_keygen_config = FheKeyGenConfig::new();
     fhe_keygen_config.serialize_keys(&client_key, &compressed_server_key, &compressed_public_key);
