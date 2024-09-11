@@ -4,7 +4,8 @@ resolver = "2"
 
 members = [
     "crates/rollup",
-    "crates/stf"
+    "crates/stf",
+    "crates/adapters/sui",
 ]
 
 [workspace.package]
@@ -36,6 +37,7 @@ sov-first-read-last-write-cache = { git = "ssh://git@github.com/cyferio-labs/sov
 sov-cli = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
 sov-mock-da = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
 sov-celestia-adapter = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
+sov-sui-da = { path = "./crates/adapters/sui" }
 sov-kernels = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
 sov-capabilities = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
 sov-test-utils = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
@@ -60,3 +62,11 @@ tempfile = "3.5"
 jsonrpsee = { version = "0.24.2", features = ["jsonrpsee-types"] }
 
 risc0-build = "1.0.5"
+
+#sui
+derive_more = { version = "0.99.11", default-features = false }
+hex = { version = "0.4.3" }
+reqwest = { version = "0.12", features = [
+    "rustls-tls",
+], default-features = false }
+thiserror = "1.0.50"

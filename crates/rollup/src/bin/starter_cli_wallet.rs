@@ -7,6 +7,8 @@ use sov_modules_rollup_blueprint::WalletBlueprint;
 use sov_rollup_starter::celestia_rollup::CelestiaRollup as StarterRollup;
 #[cfg(all(feature = "mock_da", not(feature = "celestia_da")))]
 use sov_rollup_starter::mock_rollup::MockRollup as StarterRollup;
+#[cfg(all(feature = "sui_da", not(feature = "mock_da")))]
+use sov_rollup_starter::sui_rollup::SuiRollup as StarterRollup;
 use stf_starter::runtime::RuntimeSubcommand;
 
 #[tokio::main]
