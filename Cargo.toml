@@ -17,29 +17,29 @@ publish = false
 rust-version = "1.73"
 
 [workspace.dependencies]
-sov-modules-api = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
-sov-state = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
-sov-accounts = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
-sov-nonces = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
-sov-bank = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
-sov-ledger-apis = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
-sov-prover-incentives = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
-sov-sequencer-registry = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
-sov-modules-stf-blueprint = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
-sov-modules-rollup-blueprint = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
-sov-stf-runner = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
-sov-db = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
-sov-sequencer = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
-sov-rollup-interface = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
-sov-risc0-adapter = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
-sov-mock-zkvm = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
-sov-first-read-last-write-cache = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
-sov-cli = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
-sov-mock-da = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
-sov-celestia-adapter = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
-sov-kernels = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
-sov-capabilities = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
-sov-test-utils = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", rev = "8cf5b279d5f35806a787e4862ae9745d470f38c9" }
+sov-modules-api = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-state = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-accounts = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-nonces = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-bank = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-ledger-apis = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-prover-incentives = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-sequencer-registry = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-modules-stf-blueprint = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-modules-rollup-blueprint = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-stf-runner = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-db = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-sequencer = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-rollup-interface = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-risc0-adapter = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-mock-zkvm = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-first-read-last-write-cache = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-cli = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-mock-da = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-celestia-adapter = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-kernels = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-capabilities = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-test-utils = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
 stf-starter = { path = "./crates/stf" }
 
 # fhe modules
