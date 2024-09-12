@@ -3,7 +3,9 @@
 #  - "sqlite://demo_data/da.sqlite?mode=rwc"
 #  - "sqlite::memory:"
 #  - "postgresql://root:hunter2@aws.amazon.com/mock-da"
-node_client_url = "https://fullnode.testnet.sui.io:443"
+#node_client_url = "https://fullnode.testnet.sui.io:443"
+node_client_url = "https://rpc-testnet.suiscan.xyz:443"
+
 connection_string = "sqlite://mock_da.sqlite?mode=rwc"
 # String representation of sequencer address.
 # For initial full node should match genesis of sequencer-registry.
@@ -15,7 +17,9 @@ sender_address = [118, 208, 52, 255, 215, 55, 21, 88, 199, 73, 99, 222, 94, 112,
 #              Empty blocks can be produced with this option.
 #  - on_submit: new blocks are produced on submission of batch/blob.
 #              `block_time_ms` defines maximum waiting time for a new block
-block_producing = "periodic"
+#block_producing = "periodic"
+block_producing = "on_submit"
+
 # Block time depends on `block_producing`:
 # For `periodic` it defines how often new blocks will be produced, approximately.
 # For `on_submit` it defines max time service will wait for a new block.
@@ -28,7 +32,7 @@ path = "../../rollup-starter-data"
 # We define the rollup's genesis to occur at block number `start_height`. The rollup will ignore
 # any blocks before this height
 [runner]
-genesis_height = 99235190
+genesis_height = 108895210
 da_polling_interval_ms = 1000
 
 [runner.rpc_config]
