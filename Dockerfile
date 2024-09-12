@@ -1,4 +1,4 @@
-# Use the official CUDA image as the base
+# Stage 1: Builder stage
 FROM nvidia/cuda:11.8.0-devel-ubuntu20.04 AS builder
 
 # Install necessary dependencies
@@ -8,11 +8,25 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libclang-dev \
     curl \
     ca-certificates \
-    git
+    git \
+    openssh-client
 
-# Install Rust toolchain
+# Add the Rust toolchain
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
+
+# Add SSH keys to the container securely
+# Here, we expect to pass the SSH key via build secrets (from host machine)
+# It’s critical to keep the private key secret and not include it in the final image
+
+# Set up the SSH key (from build argument)
+ARG SSH_PRIVATE_KEY
+RUN mkdir -p /root/.ssh && \
+    echo "$SSH_PRIVATE_KEY" > /root/.ssh/id_ed25519 && \
+    chmod 600 /root/.ssh/id_ed25519
+
+# Avoid StrictHostKeyChecking to prevent host verification issues
+RUN touch /root/.ssh/config && echo "Host *\n\tStrictHostKeyChecking no\n" >> /root/.ssh/config
 
 # Set the working directory inside the container
 WORKDIR /usr/src/myapp
@@ -20,10 +34,10 @@ WORKDIR /usr/src/myapp
 # Copy the source code
 COPY . .
 
-# Install necessary Rust dependencies and compile the application
-RUN cargo build --release
+# Clone private dependencies using SSH
+RUN --mount=type=ssh cargo build --release
 
-# Create a smaller runtime image with the compiled binary
+# Stage 2: Final runtime image
 FROM nvidia/cuda:11.8.0-base-ubuntu20.04
 
 # Set the working directory
