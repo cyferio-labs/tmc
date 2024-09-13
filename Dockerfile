@@ -15,7 +15,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     openssh-client \
     pkg-config \
     libssl-dev \
-    cmake
+    && wget https://github.com/Kitware/CMake/releases/download/v3.24.0/cmake-3.24.0-linux-x86_64.sh \
+    && chmod +x cmake-3.24.0-linux-x86_64.sh \
+    && ./cmake-3.24.0-linux-x86_64.sh --skip-license --prefix=/usr/local
 
 # Add the Rust toolchain
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
