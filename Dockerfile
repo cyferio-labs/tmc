@@ -11,24 +11,25 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     openssh-client \
     pkg-config \
-    libssl-dev
+    libssl-dev \
+    cmake
 
 # Add the Rust toolchain
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
 ENV PATH="/root/.cargo/bin:${PATH}"
 
-# Add SSH keys to the container securely
-# Here, we expect to pass the SSH key via build secrets (from host machine)
-# It’s critical to keep the private key secret and not include it in the final image
+# # Add SSH keys to the container securely
+# # Here, we expect to pass the SSH key via build secrets (from host machine)
+# # It’s critical to keep the private key secret and not include it in the final image
 
-# Set up the SSH key (from build argument)
-ARG SSH_PRIVATE_KEY
-RUN mkdir -p /root/.ssh && \
-    echo "$SSH_PRIVATE_KEY" > /root/.ssh/id_ed25519 && \
-    chmod 600 /root/.ssh/id_ed25519
+# # Set up the SSH key (from build argument)
+# ARG SSH_PRIVATE_KEY
+# RUN mkdir -p /root/.ssh && \
+#     echo "$SSH_PRIVATE_KEY" > /root/.ssh/id_ed25519 && \
+#     chmod 600 /root/.ssh/id_ed25519
 
-# Avoid StrictHostKeyChecking to prevent host verification issues
-RUN touch /root/.ssh/config && echo "Host *\n\tStrictHostKeyChecking no\n" >> /root/.ssh/config
+# # Avoid StrictHostKeyChecking to prevent host verification issues
+# RUN touch /root/.ssh/config && echo "Host *\n\tStrictHostKeyChecking no\n" >> /root/.ssh/config
 
 # Set the working directory inside the container
 WORKDIR /usr/src/myapp
