@@ -35,7 +35,7 @@ ENV PATH="/root/.cargo/bin:${PATH}"
 # RUN touch /root/.ssh/config && echo "Host *\n\tStrictHostKeyChecking no\n" >> /root/.ssh/config
 
 # Set the working directory inside the container
-WORKDIR /usr/src/myapp
+WORKDIR /usr/src/tmc-gpu-accel
 
 # Copy the source code
 COPY . .
@@ -50,11 +50,11 @@ FROM nvidia/cuda:11.8.0-base-ubuntu20.04
 WORKDIR /usr/local/bin/
 
 # Copy the compiled binary from the builder stage
-COPY --from=builder /usr/src/myapp/target/release/myapp .
+COPY --from=builder /usr/src/tmc-gpu-accel/target/release/tmc-gpu-accel .
 
 # Ensure the NVIDIA libraries are properly configured
 ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
 
 # Set the entrypoint to the compiled Rust binary
-ENTRYPOINT ["./myapp"]
+ENTRYPOINT ["./tmc-gpu-accel"]
