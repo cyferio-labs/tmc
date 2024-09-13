@@ -1,6 +1,9 @@
 # Stage 1: Builder stage
 FROM nvidia/cuda:11.8.0-devel-ubuntu20.04 AS builder
 
+ENV TZ=Asia/Taipei \
+    DEBIAN_FRONTEND=noninteractive
+
 # Install necessary dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
