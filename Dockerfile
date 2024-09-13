@@ -1,5 +1,6 @@
-# Stage 1: Builder stage
-FROM nvidia/cuda:11.8.0-devel-ubuntu20.04 AS builder
+# # Stage 1: Builder stage
+# FROM nvidia/cuda:11.8.0-devel-ubuntu20.04 AS builder
+FROM nvidia/cuda:11.8.0-devel-ubuntu20.04
 
 ENV TZ=Asia/Taipei \
     DEBIAN_FRONTEND=noninteractive
@@ -48,18 +49,19 @@ RUN --mount=type=ssh cargo build --release --bin node
 # Verify the binary exists
 RUN ls -la /usr/src/tmc-gpu-accel/target/release/
 
-# Stage 2: Final runtime image
-FROM nvidia/cuda:11.8.0-base-ubuntu20.04
+# Disable the runtime image build
+# # Stage 2: Final runtime image
+# FROM nvidia/cuda:11.8.0-base-ubuntu20.04
 
-# Set the working directory
-WORKDIR /usr/local/bin/
+# # Set the working directory
+# WORKDIR /usr/local/bin/
 
-# Copy the compiled binary from the builder stage
-COPY --from=builder /usr/src/tmc-gpu-accel/target/release/node .
+# # Copy the compiled binary from the builder stage
+# COPY --from=builder /usr/src/tmc-gpu-accel/target/release/node .
 
-# Ensure the NVIDIA libraries are properly configured
-ENV NVIDIA_VISIBLE_DEVICES all
-ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
+# # Ensure the NVIDIA libraries are properly configured
+# ENV NVIDIA_VISIBLE_DEVICES all
+# ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
 
-# Set the entrypoint to the compiled Rust binary
-ENTRYPOINT ["./node"]
+# # Set the entrypoint to the compiled Rust binary
+# ENTRYPOINT ["./node"]
