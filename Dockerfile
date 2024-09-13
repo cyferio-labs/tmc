@@ -58,6 +58,9 @@ ENV SKIP_GUEST_BUILD=1 \
 # Build the docker and clone private dependencies using SSH
 RUN --mount=type=ssh cargo build --release
 
+# Verify the binary exists
+RUN ls -la /usr/src/tmc-gpu-accel/target/release/
+
 # Stage 2: Final runtime image
 FROM nvidia/cuda:11.8.0-base-ubuntu20.04
 
