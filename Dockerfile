@@ -5,6 +5,7 @@ ENV TZ=Asia/Taipei \
     DEBIAN_FRONTEND=noninteractive
 
 # Install necessary dependencies
+# CMAKE 3.24.0 is required for tfhe-cuda-backend v0.3.0
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     clang \
@@ -43,7 +44,18 @@ WORKDIR /usr/src/tmc-gpu-accel
 # Copy the source code
 COPY . .
 
-# Clone private dependencies using SSH
+# Install risc0 toolchain
+RUN cargo install cargo-binstall
+
+# Install cargo-risczero by piping 'yes' to the command
+RUN echo yes | cargo binstall cargo-risczero
+RUN cargo risczero install
+
+# Export necessary environment variables to temporarily skip zk prover build
+ENV SKIP_GUEST_BUILD=1 \
+    SOV_PROVER_MODE=skip
+
+# Build the docker and clone private dependencies using SSH
 RUN --mount=type=ssh cargo build --release
 
 # Stage 2: Final runtime image
