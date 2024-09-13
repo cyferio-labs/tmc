@@ -1,20 +1,19 @@
-use anyhow::anyhow;
-use fastcrypto::hash::HashFunction;
-use fastcrypto::traits::{KeyPair, ToFromBytes};
+use anyhow::{anyhow, Result};
 use shared_crypto::intent::{Intent, IntentMessage};
 use sui_json_rpc_types::SuiTransactionBlockResponseOptions;
+use sui_sdk::rpc_types::SuiObjectDataOptions; // 修复了这里的冒号
 use sui_sdk::types::{
     base_types::{ObjectID, SuiAddress},
     crypto::SuiKeyPair,
     programmable_transaction_builder::ProgrammableTransactionBuilder,
-    transaction::{Argument, CallArg, Command, ProgrammableMoveCall, TransactionData},
+    transaction::{Argument, CallArg, Command, ObjectArg, ProgrammableMoveCall, TransactionData},
     Identifier,
 };
 use sui_sdk::SuiClientBuilder;
 use sui_types::crypto::Signer;
 use sui_types::signature::GenericSignature;
 
-pub async fn send_transaction() -> Result<(), anyhow::Error> {
+pub async fn send_transaction() -> Result<()> {
     // 1) 获取 Sui 客户端
     let sui_client = SuiClientBuilder::default().build_testnet().await?;
 
@@ -24,19 +23,15 @@ pub async fn send_transaction() -> Result<(), anyhow::Error> {
         SuiKeyPair::decode(private_key_str).map_err(|e| anyhow!("解码失败: {:?}", e))?;
 
     // 确保是 Ed25519 类型
-    let ed25519_keypair = if let SuiKeyPair::Ed25519(keypair) = sui_keypair {
-        keypair
-    } else {
-        return Err(anyhow!("解码的密钥对不是 Ed25519 类型"));
+    let ed25519_keypair = match sui_keypair {
+        SuiKeyPair::Ed25519(keypair) => keypair,
+        _ => return Err(anyhow!("解码的密钥对不是 Ed25519 类型")),
     };
 
     let pk = ed25519_keypair.public();
     println!("公钥: {:?}", pk);
 
-    let address: &[u8] = pk.as_bytes();
-    println!("address: {:?}", address);
-
-    let sender = SuiAddress::try_from(pk).unwrap();
+    let sender = SuiAddress::try_from(pk).map_err(|e| anyhow!("地址转换失败: {:?}", e))?;
     println!("Sender: {:?}", sender);
 
     // 获取 gas_coin
@@ -47,26 +42,65 @@ pub async fn send_transaction() -> Result<(), anyhow::Error> {
         .data
         .into_iter()
         .next()
-        .ok_or(anyhow!("No coins found for sender"))?;
+        .ok_or(anyhow!("未找到发送者的 coin"))?;
+
+    // 获取 Walrusda 对象
+    let walrus_da_object_id = ObjectID::from_hex_literal(
+        "0x6c58237c52be94c62791f85f45573dc0578cddb7eaa81184d94198e9eb283b2f",
+    )?;
+
+    let sui_data_options = SuiObjectDataOptions {
+        show_type: true,
+        show_owner: true,
+        show_previous_transaction: true,
+        show_display: true,
+        show_content: true,
+        show_bcs: true,
+        show_storage_rebate: true,
+    };
+
+    let walrus_da_object__with_options = sui_client
+        .read_api()
+        .get_object_with_options(walrus_da_object_id, sui_data_options)
+        .await?;
+
+    let walrus_da_object_info = walrus_da_object__with_options
+        .object()
+        .map_err(|_| anyhow!("未找到 Walrusda 对象"))?
+        .object_ref();
 
     // 构建可编程交易
-    let input_value = 10u64;
-    let input_argument = CallArg::Pure(bcs::to_bytes(&input_value).unwrap());
+    let da_height = 10u64;
+    let blob = vec![1, 2, 3, 4, 5]; // 示例 Blob 数据
+
+    let da_height_argument = CallArg::Pure(bcs::to_bytes(&da_height)?);
+    let blob_argument = CallArg::Pure(bcs::to_bytes(&blob)?);
+    let walrus_da_object = CallArg::Object(ObjectArg::SharedObject {
+        id: walrus_da_object_info.0,
+        initial_shared_version: walrus_da_object_info.1,
+        mutable: true,
+    });
 
     let mut builder = ProgrammableTransactionBuilder::new();
-    builder.input(input_argument)?;
+    builder.input(walrus_da_object)?;
+    builder.input(da_height_argument)?;
+    builder.input(blob_argument)?;
 
-    let pkg_id = "0x883393ee444fb828aa0e977670cf233b0078b41d144e6208719557cb3888244d";
-    let package = ObjectID::from_hex_literal(pkg_id).map_err(|e| anyhow!(e))?;
-    let module = Identifier::new("hello_world").map_err(|e| anyhow!(e))?;
-    let function = Identifier::new("hello_world").map_err(|e| anyhow!(e))?;
+    let pkg_id = "0xaaabcffd2ab47f61a287110cb5626045d5a9ceea2cc8618841f124bccd9972cd";
+    let package = ObjectID::from_hex_literal(pkg_id)?;
+    let module = Identifier::new("walrus_da")?;
+    let function = Identifier::new("add_blob")?;
 
     builder.command(Command::MoveCall(Box::new(ProgrammableMoveCall {
         package,
         module,
         function,
         type_arguments: vec![],
-        arguments: vec![Argument::Input(0)],
+        arguments: vec![
+            Argument::Input(0), // Walrusda object
+            Argument::Input(1), // da_height
+            Argument::Input(2), // blob
+        ],
     })));
     let ptb = builder.finish();
 
@@ -86,7 +120,7 @@ pub async fn send_transaction() -> Result<(), anyhow::Error> {
     let intent_msg = IntentMessage::new(Intent::sui_transaction(), tx_data);
     let raw_tx = bcs::to_bytes(&intent_msg).expect("bcs should not fail");
     let mut hasher = sui_types::crypto::DefaultHash::default();
-    hasher.update(raw_tx.clone());
+    hasher.update(&raw_tx);
     let digest = hasher.finalize().digest;
     let sui_sig = ed25519_keypair.sign(&digest);
 
@@ -113,14 +147,7 @@ pub async fn send_transaction() -> Result<(), anyhow::Error> {
 }
 
 #[tokio::main]
-async fn main() -> Result<(), anyhow::Error> {
-    // Sui testnet -- https://fullnode.testnet.sui.io:443
-    // let sui_testnet = SuiClientBuilder::default().build_testnet().await?;
-    // println!("Sui testnet version: {}", sui_testnet.api_version());
-
-    // // Sui devnet -- https://fullnode.devnet.sui.io:443
-    // let sui_devnet = SuiClientBuilder::default().build_devnet().await?;
-    // println!("Sui devnet version: {}", sui_devnet.api_version());
-    let _a = send_transaction().await;
+async fn main() -> Result<()> {
+    let _ = send_transaction().await;
     Ok(())
 }
