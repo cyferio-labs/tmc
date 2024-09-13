@@ -5,10 +5,13 @@ edition = "2021"
 resolver = "2"
 
 [dependencies]
-sui_sdk = { git = "https://github.com/mystenlabs/sui", package = "sui-sdk" }
-fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "5f2c63266a065996d53f98156f0412782b468597" }
-sui-json-rpc-types = { git = "https://github.com/mystenlabs/sui" }
-sui-types = { git = "https://github.com/mystenlabs/sui" }
+sui_sdk = { workspace = true }
+fastcrypto = { workspace = true }
+sui-json-rpc-types = { workspace = true }
+sui-types = { workspace = true }
+shared-crypto = { workspace = true }
+
+
 tokio = { version = "1.2", features = ["full"] }
 serde = { workspace = true }
 serde_json = { workspace = true }
@@ -21,7 +24,6 @@ hex = { workspace = true }
 thiserror = { workspace = true }
 borsh = { workspace = true }
 tracing = { workspace = true }
-shared-crypto = { git = "https://github.com/mystenlabs/sui" }
 derive_more = { workspace = true, features = ["from", "into"] }
 futures = { version = "0.3", default-features = false }
 sp-keyring = { version = "24", optional = true }
@@ -40,7 +42,6 @@ reqwest = { workspace = true, features = [
     "json",
 ], default-features = false, optional = true }
 base58 = "0.2"
-
 
 [[bin]]
 name = "test"

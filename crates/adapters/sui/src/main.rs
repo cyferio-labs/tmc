@@ -1,15 +1,18 @@
 use anyhow::{anyhow, Result};
+use fastcrypto::hash::HashFunction;
 use shared_crypto::intent::{Intent, IntentMessage};
 use sui_json_rpc_types::SuiTransactionBlockResponseOptions;
-use sui_sdk::rpc_types::SuiObjectDataOptions; // 修复了这里的冒号
+use sui_sdk::rpc_types::SuiObjectDataOptions;
 use sui_sdk::types::{
-    base_types::{ObjectID, SuiAddress},
+    base_types::{ObjectID, SequenceNumber, SuiAddress},
     crypto::SuiKeyPair,
     programmable_transaction_builder::ProgrammableTransactionBuilder,
     transaction::{Argument, CallArg, Command, ObjectArg, ProgrammableMoveCall, TransactionData},
     Identifier,
 };
 use sui_sdk::SuiClientBuilder;
+use sui_types::crypto::DefaultHash;
+use sui_types::crypto::KeypairTraits;
 use sui_types::crypto::Signer;
 use sui_types::signature::GenericSignature;
 
@@ -17,7 +20,22 @@ pub async fn send_transaction() -> Result<()> {
     // 1) 获取 Sui 客户端
     let sui_client = SuiClientBuilder::default().build_testnet().await?;
 
-    let private_key_str = "suiprivkey1qr78zgu2cwcpdma2t50xrsx04z5ekma0tnjyfvl69rp0mdv996q5xkn5wu6";
+    // let node_client_url = "https://rpc-testnet.suiscan.xyz:443";
+    // let sui_client = SuiClientBuilder::default()
+    //     .build(node_client_url)
+    //     .await
+    //     .map_err(|e| anyhow!("Failed to create Sui client: {:?}", e))?;
+
+    // 验证连接
+    let _ = sui_client
+        .read_api()
+        .get_reference_gas_price()
+        .await
+        .map_err(|e| anyhow!("Failed to connect to Sui network: {:?}", e))?;
+
+    println!("Successfully connected to Sui network");
+
+    let private_key_str = "suiprivkey1qzlmtflas9pd0lqxr7wyx9u7rdczm2w9ecax2fkwmgx3y407zelj2dz8024";
 
     let sui_keypair =
         SuiKeyPair::decode(private_key_str).map_err(|e| anyhow!("解码失败: {:?}", e))?;
@@ -49,37 +67,44 @@ pub async fn send_transaction() -> Result<()> {
         "0x6c58237c52be94c62791f85f45573dc0578cddb7eaa81184d94198e9eb283b2f",
     )?;
 
-    let sui_data_options = SuiObjectDataOptions {
-        show_type: true,
-        show_owner: true,
-        show_previous_transaction: true,
-        show_display: true,
-        show_content: true,
-        show_bcs: true,
-        show_storage_rebate: true,
-    };
+    let sui_data_options = SuiObjectDataOptions::default();
 
-    let walrus_da_object__with_options = sui_client
+    // 在交易执行前立即获取最新的对象信息
+    let walrus_da_object_with_options = sui_client
         .read_api()
-        .get_object_with_options(walrus_da_object_id, sui_data_options)
+        .get_object_with_options(walrus_da_object_id, sui_data_options.clone())
         .await?;
 
-    let walrus_da_object_info = walrus_da_object__with_options
-        .object()
-        .map_err(|_| anyhow!("未找到 Walrusda 对象"))?
-        .object_ref();
+    let (object_id, version, _digest) =
+        walrus_da_object_with_options.object().unwrap().object_ref();
+
+    let past_walrus_da_object = sui_client
+        .read_api()
+        .try_get_parsed_past_object(object_id, version, sui_data_options.clone())
+        .await?;
+    println!(" *** Past Object *** ");
+    println!("{:?}", past_walrus_da_object);
+    println!(" *** Past Object ***\n");
+
+    let sui_get_past_object_request = past_walrus_da_object.clone().into_object()?;
+
+    let walrus_da_object = CallArg::Object(ObjectArg::SharedObject {
+        id: sui_get_past_object_request.object_id,
+        initial_shared_version: SequenceNumber::from(127634460u64),
+        mutable: true,
+    });
+
+    println!(
+        "initial_shared_version: {:?}",
+        sui_get_past_object_request.version.clone()
+    );
 
     // 构建可编程交易
-    let da_height = 10u64;
-    let blob = vec![1, 2, 3, 4, 5]; // 示例 Blob 数据
+    let da_height = 0u64;
+    let blob: Vec<u8> = vec![1, 2, 3, 4, 5];
 
     let da_height_argument = CallArg::Pure(bcs::to_bytes(&da_height)?);
     let blob_argument = CallArg::Pure(bcs::to_bytes(&blob)?);
-    let walrus_da_object = CallArg::Object(ObjectArg::SharedObject {
-        id: walrus_da_object_info.0,
-        initial_shared_version: walrus_da_object_info.1,
-        mutable: true,
-    });
 
     let mut builder = ProgrammableTransactionBuilder::new();
     builder.input(walrus_da_object)?;
@@ -104,7 +129,7 @@ pub async fn send_transaction() -> Result<()> {
     })));
     let ptb = builder.finish();
 
-    let gas_budget = 10_000_000;
+    let gas_budget = 100_000_000;
     let gas_price = sui_client.read_api().get_reference_gas_price().await?;
 
     // 创建交易数据
@@ -119,13 +144,13 @@ pub async fn send_transaction() -> Result<()> {
     // 计算需要签名的摘要
     let intent_msg = IntentMessage::new(Intent::sui_transaction(), tx_data);
     let raw_tx = bcs::to_bytes(&intent_msg).expect("bcs should not fail");
-    let mut hasher = sui_types::crypto::DefaultHash::default();
-    hasher.update(&raw_tx);
+    let mut hasher = DefaultHash::default();
+    hasher.update(raw_tx.clone());
     let digest = hasher.finalize().digest;
     let sui_sig = ed25519_keypair.sign(&digest);
 
     println!("Executing the transaction...");
-    let transaction_response = sui_client
+    match sui_client
         .quorum_driver_api()
         .execute_transaction_block(
             sui_types::transaction::Transaction::from_generic_sig_data(
@@ -135,19 +160,28 @@ pub async fn send_transaction() -> Result<()> {
             SuiTransactionBlockResponseOptions::default(),
             None,
         )
-        .await?;
-
-    println!(
-        "Transaction executed. Transaction digest: {}",
-        transaction_response.digest.base58_encode()
-    );
-    println!("{}", transaction_response);
-
-    Ok(())
+        .await
+    {
+        Ok(transaction_response) => {
+            println!(
+                "Transaction executed. Transaction digest: {}",
+                transaction_response.digest.base58_encode()
+            );
+            println!("{}", transaction_response);
+            Ok(())
+        }
+        Err(e) => {
+            println!("Error executing transaction: {:?}", e);
+            Err(anyhow!("Transaction execution failed: {:?}", e))
+        }
+    }
 }
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let _ = send_transaction().await;
+    match send_transaction().await {
+        Ok(_) => println!("Transaction sent successfully"),
+        Err(e) => println!("Error sending transaction: {:?}", e),
+    }
     Ok(())
 }

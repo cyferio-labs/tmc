@@ -49,9 +49,12 @@ tokio-stream = { workspace = true }
 uuid = { workspace = true, features = ["std", "v7"] }
 utoipa-swagger-ui = { workspace = true, features = ["axum"] }
 
-sui_sdk = { git = "https://github.com/mystenlabs/sui", package = "sui-sdk" }
-sui-types = { git = "https://github.com/mystenlabs/sui" }
-shared-crypto = { git = "https://github.com/mystenlabs/sui" }
+sui_sdk = { workspace = true }
+fastcrypto = { workspace = true }
+sui-json-rpc-types = { workspace = true }
+sui-types = { workspace = true }
+shared-crypto = { workspace = true }
+
 bcs = "0.1.4"
 
 [dev-dependencies]
