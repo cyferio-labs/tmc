@@ -9,7 +9,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     ca-certificates \
     git \
-    openssh-client
+    openssh-client \
+    pkg-config \
+    libssl-dev
 
 # Add the Rust toolchain
 RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
