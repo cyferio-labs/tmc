@@ -43,8 +43,11 @@ RUN cargo risczero install
 ENV SKIP_GUEST_BUILD=1 \
     SOV_PROVER_MODE=skip
 
-# Build the docker and clone private dependencies using SSH
+# Build node binary
 RUN --mount=type=ssh cargo build --release --bin node
+
+# Build starter-cli-wallet binary
+RUN --mount=type=ssh cargo build --release --bin starter-cli-wallet
 
 # Verify the binary exists
 RUN ls -la /usr/src/tmc-gpu-accel/target/release/
