@@ -10,7 +10,40 @@ connection_string = "sqlite://mock_da.sqlite?mode=rwc"
 # String representation of sequencer address.
 # For initial full node should match genesis of sequencer-registry.
 # It is going to be a DA address that blobs from this node will be associated.
-sender_address = [118, 208, 52, 255, 215, 55, 21, 88, 199, 73, 99, 222, 94, 112, 174, 108, 11, 205, 213, 13, 211, 49, 121, 24, 225, 166, 14, 181, 61, 27, 207, 136]
+sender_address = [
+    118,
+    208,
+    52,
+    255,
+    215,
+    55,
+    21,
+    88,
+    199,
+    73,
+    99,
+    222,
+    94,
+    112,
+    174,
+    108,
+    11,
+    205,
+    213,
+    13,
+    211,
+    49,
+    121,
+    24,
+    225,
+    166,
+    14,
+    181,
+    61,
+    27,
+    207,
+    136,
+]
 # Defines how new blocks should be produced.
 # Can be 2 options:
 #  - periodic: new blocks produced periodically every `block_time_ms`.
@@ -32,7 +65,7 @@ path = "../../rollup-starter-data"
 # We define the rollup's genesis to occur at block number `start_height`. The rollup will ignore
 # any blocks before this height
 [runner]
-genesis_height = 108895210
+genesis_height = 109565082
 da_polling_interval_ms = 1000
 
 [runner.rpc_config]

@@ -35,6 +35,8 @@ use tokio::sync::{oneshot, Mutex};
 use tokio_stream::wrappers::BroadcastStream;
 use tracing::info;
 
+use base58::{FromBase58, ToBase58};
+use hex;
 /// A bunch of associated types that define the behavior of a [`Sequencer`].
 pub trait SequencerSpec: Clone + Send + Sync + 'static {
     /// The [`BatchBuilder`] that the sequencer uses to process submitted
@@ -192,10 +194,29 @@ impl<Ss: SequencerSpec> Sequencer<Ss> {
             );
         }
 
-        match self
-            .record_transaction_to_sui_da(da_height, serialized_batch)
-            .await
-        {
+        let digest = da_tx_id.as_ref().to_base58();
+
+        // 将 Base58 字符串解码回 Vec<u8>
+        // let digest: String = base58_string
+        //     .from_base58()
+        //     .map_err(|e| anyhow!("Failed to decode Base58: {:?}", e))?;
+
+        // 验证长度
+        // if digest.len() != 32 {
+        //     return Err(anyhow!(
+        //         "Decoded bytes must have length 32, but it has {}",
+        //         digest.len()
+        //     ));
+        // }
+
+        println!("Digest as String: {:?}", digest);
+        // println!("Base58 encoded: {}", base58_string);
+
+        // let digest_array: [u8; 32] = digest
+        //     .try_into()
+        //     .map_err(|_| anyhow!("Digest must be exactly 32 bytes"))?;
+
+        match self.record_transaction_to_sui_da(da_height, digest).await {
             Ok(_) => println!("Transaction sent successfully"),
             Err(e) => anyhow::bail!("failed to submit batch: {}", e),
         };
@@ -226,7 +247,7 @@ impl<Ss: SequencerSpec> Sequencer<Ss> {
     pub async fn record_transaction_to_sui_da(
         &self,
         da_height: u64,
-        serialized_batch: Vec<u8>,
+        digest: String,
     ) -> Result<(), anyhow::Error> {
         // 1) 获取 Sui 客户端
         let sui_client = SuiClientBuilder::default().build_testnet().await?;
@@ -276,7 +297,7 @@ impl<Ss: SequencerSpec> Sequencer<Ss> {
 
         // 获取 Walrusda 对象
         let walrus_da_object_id = ObjectID::from_hex_literal(
-            "0xd634c18e0e59a28ebcbc13486e196460888ea0e7f836ffaeaafbdd4027ae40d4",
+            "0xc8940506fb0cb18c593c8fcfb4ecc1d1785433e6ecf05c6082ec55bae84e3089",
         )?;
 
         let sui_data_options = SuiObjectDataOptions::default();
@@ -302,7 +323,7 @@ impl<Ss: SequencerSpec> Sequencer<Ss> {
 
         let walrus_da_object = CallArg::Object(ObjectArg::SharedObject {
             id: sui_get_past_object_request.object_id,
-            initial_shared_version: SequenceNumber::from(83960073u64),
+            initial_shared_version: SequenceNumber::from(83961839u64),
             mutable: true,
         });
 
@@ -312,14 +333,14 @@ impl<Ss: SequencerSpec> Sequencer<Ss> {
         );
 
         let da_height_argument = CallArg::Pure(bcs::to_bytes(&da_height)?);
-        let blob_argument = CallArg::Pure(bcs::to_bytes(&serialized_batch)?);
+        let digest_argument = CallArg::Pure(bcs::to_bytes(&digest.into_bytes())?);
 
         let mut builder = ProgrammableTransactionBuilder::new();
         builder.input(walrus_da_object)?;
         builder.input(da_height_argument)?;
-        builder.input(blob_argument)?;
+        builder.input(digest_argument)?;
 
-        let pkg_id = "0x4ac6aa8219dea578a0ba7ecbb408b54e2f2e201703addb5a53517ff687adb0c8";
+        let pkg_id = "0xf5f020611fad3fbb77d687671cce437874c88c319531a9019141c93ffe6c6a8e";
         let package = ObjectID::from_hex_literal(pkg_id)?;
         let module = Identifier::new("walrus_da_system")?;
         let function = Identifier::new("add_blob")?;
@@ -332,7 +353,7 @@ impl<Ss: SequencerSpec> Sequencer<Ss> {
             arguments: vec![
                 Argument::Input(0), // Walrusda object
                 Argument::Input(1), // da_height
-                Argument::Input(2), // blob
+                Argument::Input(2), // digest
             ],
         })));
         let ptb = builder.finish();
