@@ -64,7 +64,8 @@ impl FheKeyGenConfig {
 
     pub fn deserialize_keys(&self) -> Option<(ClientKey, ServerKey, PublicKey)> {
         let client_key: ClientKey = deserialize_key(&self.private_key, "private")?;
-        let compressed_server_key: CompressedServerKey = deserialize_key(&self.server_key, "server")?;
+        let compressed_server_key: CompressedServerKey =
+            deserialize_key(&self.server_key, "server")?;
         let compressed_public_key: CompressedPublicKey =
             deserialize_key(&self.public_key, "public")?;
 
