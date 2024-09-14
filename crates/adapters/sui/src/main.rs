@@ -18,13 +18,13 @@ use sui_types::signature::GenericSignature;
 
 pub async fn send_transaction() -> Result<()> {
     // 1) 获取 Sui 客户端
-    let sui_client = SuiClientBuilder::default().build_testnet().await?;
+    // let sui_client = SuiClientBuilder::default().build_testnet().await?;
 
-    // let node_client_url = "https://rpc-testnet.suiscan.xyz:443";
-    // let sui_client = SuiClientBuilder::default()
-    //     .build(node_client_url)
-    //     .await
-    //     .map_err(|e| anyhow!("Failed to create Sui client: {:?}", e))?;
+    let node_client_url = "https://rpc-testnet.suiscan.xyz:443";
+    let sui_client = SuiClientBuilder::default()
+        .build(node_client_url)
+        .await
+        .map_err(|e| anyhow!("Failed to create Sui client: {:?}", e))?;
 
     // 验证连接
     let _ = sui_client
@@ -64,7 +64,7 @@ pub async fn send_transaction() -> Result<()> {
 
     // 获取 Walrusda 对象
     let walrus_da_object_id = ObjectID::from_hex_literal(
-        "0xd634c18e0e59a28ebcbc13486e196460888ea0e7f836ffaeaafbdd4027ae40d4",
+        "0xc8940506fb0cb18c593c8fcfb4ecc1d1785433e6ecf05c6082ec55bae84e3089",
     )?;
 
     let sui_data_options = SuiObjectDataOptions::default();
@@ -90,7 +90,7 @@ pub async fn send_transaction() -> Result<()> {
 
     let walrus_da_object = CallArg::Object(ObjectArg::SharedObject {
         id: sui_get_past_object_request.object_id,
-        initial_shared_version: SequenceNumber::from(83960073u64),
+        initial_shared_version: SequenceNumber::from(83961839u64),
         mutable: true,
     });
 
@@ -111,7 +111,7 @@ pub async fn send_transaction() -> Result<()> {
     builder.input(da_height_argument)?;
     builder.input(blob_argument)?;
 
-    let pkg_id = "0x4ac6aa8219dea578a0ba7ecbb408b54e2f2e201703addb5a53517ff687adb0c8";
+    let pkg_id = "0xf5f020611fad3fbb77d687671cce437874c88c319531a9019141c93ffe6c6a8e";
     let package = ObjectID::from_hex_literal(pkg_id)?;
     let module = Identifier::new("walrus_da_system")?;
     let function = Identifier::new("add_blob")?;
