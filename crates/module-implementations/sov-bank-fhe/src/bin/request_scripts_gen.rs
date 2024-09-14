@@ -36,7 +36,7 @@ fn main() {
     // read and set the server key in this environment
     let fhe_server_key = bincode::deserialize::<CompressedServerKey>(&config.fhe_server_key)
         .unwrap()
-        .decompress();
+        .decompress_to_gpu();
     set_server_key(fhe_server_key);
 
     // create-token request
