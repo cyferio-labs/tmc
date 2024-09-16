@@ -96,49 +96,50 @@ impl<S: sov_modules_api::Spec> Bank<S> {
             .decompress();
         tracing::debug!("FHE keys have been deserialized");
 
-        let parent_prefix = self.tokens.prefix();
-        for token_config in config.tokens.iter() {
-            let token_id = &token_config.token_id;
-            tracing::debug!(
-                %token_config,
-                token_id = %token_id,
-                "Genesis of the token");
+        // Disable token creation in genesis phase for now
+        // let parent_prefix = self.tokens.prefix();
+        // for token_config in config.tokens.iter() {
+        //     let token_id = &token_config.token_id;
+        //     tracing::debug!(
+        //         %token_config,
+        //         token_id = %token_id,
+        //         "Genesis of the token");
 
-            let authorized_minters = token_config
-                .authorized_minters
-                .iter()
-                .map(|minter| TokenHolderRef::<'_, S>::from(&minter))
-                .collect::<Vec<_>>();
+        //     let authorized_minters = token_config
+        //         .authorized_minters
+        //         .iter()
+        //         .map(|minter| TokenHolderRef::<'_, S>::from(&minter))
+        //         .collect::<Vec<_>>();
 
-            let address_and_balances = token_config
-                .address_and_balances
-                .iter()
-                .map(|(address, balance)| {
-                    (TokenHolderRef::<'_, S>::from(&address), balance.clone())
-                })
-                .collect::<Vec<_>>();
+        //     let address_and_balances = token_config
+        //         .address_and_balances
+        //         .iter()
+        //         .map(|(address, balance)| {
+        //             (TokenHolderRef::<'_, S>::from(&address), balance.clone())
+        //         })
+        //         .collect::<Vec<_>>();
 
-            let token = Token::<S>::create_with_token_id(
-                &token_config.token_name,
-                &address_and_balances,
-                &authorized_minters,
-                token_id,
-                parent_prefix,
-                &fhe_public_key,
-                state,
-            )?;
+        //     let token = Token::<S>::create_with_token_id(
+        //         &token_config.token_name,
+        //         &address_and_balances,
+        //         &authorized_minters,
+        //         token_id,
+        //         parent_prefix,
+        //         &fhe_public_key,
+        //         state,
+        //     )?;
 
-            if self.tokens.get(token_id, state)?.is_some() {
-                bail!("token ID {} already exists", token_config.token_id);
-            }
+        //     if self.tokens.get(token_id, state)?.is_some() {
+        //         bail!("token ID {} already exists", token_config.token_id);
+        //     }
 
-            self.tokens.set(token_id, &token, state)?;
-            tracing::debug!(
-                token_name = %token.name,
-                token_id = %token_id,
-                "Token has been created"
-            );
-        }
+        //     self.tokens.set(token_id, &token, state)?;
+        //     tracing::debug!(
+        //         token_name = %token.name,
+        //         token_id = %token_id,
+        //         "Token has been created"
+        //     );
+        // }
         Ok(())
     }
 }
