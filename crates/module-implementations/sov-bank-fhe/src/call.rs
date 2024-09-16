@@ -94,13 +94,6 @@ impl<S: sov_modules_api::Spec> Bank<S> {
                 .decompress();
         let compressed_fhe_server_key =
             bincode::deserialize::<CompressedServerKey>(&self.fhe_server_key.get(state)?.unwrap())?;
-        let fhe_server_key = compressed_fhe_server_key.clone().decompress();
-        let gpu_server_key = compressed_fhe_server_key.decompress_to_gpu();
-
-        // set both the server keys in the environment
-        // GPU keys for computation and CPU key for ciphertext compression
-        set_server_key(fhe_server_key);
-        set_server_key(gpu_server_key);
 
         let (token_id, token) = Token::<S>::create(
             &token_name,
@@ -110,6 +103,7 @@ impl<S: sov_modules_api::Spec> Bank<S> {
             salt,
             self.tokens.prefix(),
             &fhe_public_key,
+            &compressed_fhe_server_key,
             state,
         )?;
 
@@ -213,13 +207,8 @@ impl<S: sov_modules_api::Spec> Bank<S> {
                 .decompress();
         let compressed_fhe_server_key =
             bincode::deserialize::<CompressedServerKey>(&self.fhe_server_key.get(state)?.unwrap())?;
-        let fhe_server_key = compressed_fhe_server_key.clone().decompress();
-        let gpu_server_key = compressed_fhe_server_key.decompress_to_gpu();
-
-        // set both the server keys in the environment
-        // GPU keys for computation and CPU key for ciphertext compression
+        let fhe_server_key = compressed_fhe_server_key.decompress();
         set_server_key(fhe_server_key);
-        set_server_key(gpu_server_key);
 
         let authorizer = authorizer.as_token_holder();
         token
@@ -308,13 +297,8 @@ impl<S: sov_modules_api::Spec> Bank<S> {
                 .decompress();
         let compressed_fhe_server_key =
             bincode::deserialize::<CompressedServerKey>(&self.fhe_server_key.get(state)?.unwrap())?;
-        let fhe_server_key = compressed_fhe_server_key.clone().decompress();
-        let gpu_server_key = compressed_fhe_server_key.decompress_to_gpu();
-
-        // set both the server keys in the environment
-        // GPU keys for computation and CPU key for ciphertext compression
+        let fhe_server_key = compressed_fhe_server_key.decompress();
         set_server_key(fhe_server_key);
-        set_server_key(gpu_server_key);
 
         let token = self
             .tokens

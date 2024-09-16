@@ -13,7 +13,7 @@ use thiserror::Error;
 
 // FHE deps
 use bincode;
-use tfhe::{prelude::*, CompressedFheUint64, FheUint64, PublicKey};
+use tfhe::{prelude::*, set_server_key, CompressedFheUint64, FheUint64, PublicKey, CompressedServerKey};
 
 /// Type alias to store an amount of token.
 // pub type Amount = u64;
@@ -275,6 +275,7 @@ impl<S: sov_modules_api::Spec> Token<S> {
         salt: u64,
         parent_prefix: &Prefix,
         fhe_public_key: &PublicKey,
+        compressed_fhe_server_key: &CompressedServerKey,
         state: &mut impl StateReaderAndWriter<User>,
     ) -> anyhow::Result<(TokenId, Self)> {
         let token_id = super::get_token_id::<S>(token_name, originator, salt);
@@ -285,6 +286,7 @@ impl<S: sov_modules_api::Spec> Token<S> {
             &token_id,
             parent_prefix,
             fhe_public_key,
+            compressed_fhe_server_key,
             state,
         )?;
         Ok((token_id, token))
@@ -298,10 +300,15 @@ impl<S: sov_modules_api::Spec> Token<S> {
         token_id: &TokenId,
         parent_prefix: &Prefix,
         fhe_public_key: &PublicKey,
+        compressed_fhe_server_key: &CompressedServerKey,
         state: &mut impl StateReaderAndWriter<User>,
     ) -> anyhow::Result<Token<S>> {
         let token_prefix = prefix_from_address_with_parent(parent_prefix, token_id);
         let balances = sov_modules_api::StateMap::new(token_prefix);
+
+        // set GPU server key here for FHE computation
+        let gpu_server_key = compressed_fhe_server_key.clone().decompress_to_gpu();
+        set_server_key(gpu_server_key);
 
         let encrypted_zero = FheUint64::try_encrypt(0 as u64, fhe_public_key)?;
         let mut total_supply = encrypted_zero;
@@ -312,6 +319,10 @@ impl<S: sov_modules_api::Spec> Token<S> {
                 total_supply + &balance
             }
         }
+
+        // set CPU server key here for compression operation for FHE ciphertext
+        let cpu_server_key = compressed_fhe_server_key.decompress();
+        set_server_key(cpu_server_key);
 
         // TODO: add total supply overflow check
         let total_supply = bincode::serialize(&total_supply.compress())?;
