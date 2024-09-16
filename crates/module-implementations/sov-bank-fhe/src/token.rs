@@ -307,25 +307,29 @@ impl<S: sov_modules_api::Spec> Token<S> {
         let balances = sov_modules_api::StateMap::new(token_prefix);
 
         // set GPU server key here for FHE computation
-        let gpu_server_key = compressed_fhe_server_key.clone().decompress_to_gpu();
-        set_server_key(gpu_server_key);
-
-        let encrypted_zero = FheUint64::try_encrypt(0 as u64, fhe_public_key)?;
-        let mut total_supply = encrypted_zero;
-        for (address, balance) in identities_and_balances.iter() {
-            balances.set(address, balance, state)?;
-            total_supply = {
-                let balance = bincode::deserialize::<CompressedFheUint64>(balance)?.decompress();
-                total_supply + &balance
+        {
+            let gpu_server_key = compressed_fhe_server_key.clone().decompress_to_gpu();
+            set_server_key(gpu_server_key);
+    
+            let encrypted_zero = FheUint64::try_encrypt(0 as u64, fhe_public_key)?;
+            let mut total_supply = encrypted_zero;
+            for (address, balance) in identities_and_balances.iter() {
+                balances.set(address, balance, state)?;
+                total_supply = {
+                    let balance = bincode::deserialize::<CompressedFheUint64>(balance)?.decompress();
+                    total_supply + &balance
+                }
             }
         }
 
         // set CPU server key here for compression operation for FHE ciphertext
-        let cpu_server_key = compressed_fhe_server_key.decompress();
-        set_server_key(cpu_server_key);
-
-        // TODO: add total supply overflow check
-        let total_supply = bincode::serialize(&total_supply.compress())?;
+        {
+            let cpu_server_key = compressed_fhe_server_key.decompress();
+            set_server_key(cpu_server_key);
+    
+            // TODO: add total supply overflow check
+            let total_supply = bincode::serialize(&total_supply.compress())?;
+        }            
 
         let authorized_minters = unique_minters(authorized_minters);
 
