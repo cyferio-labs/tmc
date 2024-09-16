@@ -338,7 +338,7 @@ impl<S: sov_modules_api::Spec> Token<S> {
 
         Ok(Token::<S> {
             name: token_name.to_owned(),
-            serialized_total_supply,
+            total_supply: serialized_total_supply,
             balances,
             authorized_minters,
         })
