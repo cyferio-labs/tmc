@@ -1,6 +1,7 @@
 #[cfg(feature = "native")]
 use core::str::FromStr;
 use std::collections::HashSet;
+use std::default;
 use std::fmt::Formatter;
 
 use anyhow::bail;
@@ -305,6 +306,7 @@ impl<S: sov_modules_api::Spec> Token<S> {
     ) -> anyhow::Result<Token<S>> {
         let token_prefix = prefix_from_address_with_parent(parent_prefix, token_id);
         let balances = sov_modules_api::StateMap::new(token_prefix);
+        let mut total_supply = FheUint64::default();
 
         // set GPU server key here for FHE computation
         {
@@ -312,30 +314,31 @@ impl<S: sov_modules_api::Spec> Token<S> {
             set_server_key(gpu_server_key);
     
             let encrypted_zero = FheUint64::try_encrypt(0 as u64, fhe_public_key)?;
-            let mut total_supply = encrypted_zero;
+            total_supply = encrypted_zero;
             for (address, balance) in identities_and_balances.iter() {
                 balances.set(address, balance, state)?;
                 total_supply = {
                     let balance = bincode::deserialize::<CompressedFheUint64>(balance)?.decompress();
+                    // TODO: add total supply overflow check
                     total_supply + &balance
                 }
             }
         }
 
         // set CPU server key here for compression operation for FHE ciphertext
+        let mut serialized_total_supply = Vec::new();
         {
             let cpu_server_key = compressed_fhe_server_key.decompress();
             set_server_key(cpu_server_key);
-    
-            // TODO: add total supply overflow check
-            let total_supply = bincode::serialize(&total_supply.compress())?;
-        }            
+
+            serialized_total_supply = bincode::serialize(&total_supply.compress())?;
+        }
 
         let authorized_minters = unique_minters(authorized_minters);
 
         Ok(Token::<S> {
             name: token_name.to_owned(),
-            total_supply,
+            serialized_total_supply,
             balances,
             authorized_minters,
         })
