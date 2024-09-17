@@ -306,7 +306,7 @@ impl<S: sov_modules_api::Spec> Token<S> {
     ) -> anyhow::Result<Token<S>> {
         let token_prefix = prefix_from_address_with_parent(parent_prefix, token_id);
         let balances = sov_modules_api::StateMap::new(token_prefix);
-        let mut total_supply = FheUint64::default();
+        let mut total_supply: FheUint64;
 
         // set GPU server key here for FHE computation
         {
