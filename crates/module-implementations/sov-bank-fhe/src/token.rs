@@ -13,6 +13,7 @@ use sov_state::Prefix;
 use thiserror::Error;
 
 // FHE deps
+use std::time::Instant;
 use bincode;
 use tfhe::{prelude::*, set_server_key, CompressedFheUint64, FheUint64, PublicKey, CompressedServerKey};
 
@@ -307,20 +308,64 @@ impl<S: sov_modules_api::Spec> Token<S> {
         let token_prefix = prefix_from_address_with_parent(parent_prefix, token_id);
         let balances = sov_modules_api::StateMap::new(token_prefix);
         let mut total_supply: FheUint64;
+        let mut encrypted_zero: FheUint64;
 
         // set GPU server key here for FHE computation
         {
+            let start = Instant::now();
             let gpu_server_key = compressed_fhe_server_key.clone().decompress_to_gpu();
+            tracing::debug!("Decompressing server key to GPU took {:?}", start.elapsed());
+
+            let start = Instant::now();
             set_server_key(gpu_server_key);
+            tracing::debug!("Setting server key to GPU took {:?}", start.elapsed());
+
+            let start = Instant::now();
+            encrypted_zero = FheUint64::try_encrypt(0 as u64, fhe_public_key)?;
+            tracing::debug!("Encrypting zero took {:?}", start.elapsed());
+        }
     
-            let encrypted_zero = FheUint64::try_encrypt(0 as u64, fhe_public_key)?;
-            total_supply = encrypted_zero;
+        
+        total_supply = encrypted_zero;
+
+        {
             for (address, balance) in identities_and_balances.iter() {
                 balances.set(address, balance, state)?;
                 total_supply = {
-                    let balance = bincode::deserialize::<CompressedFheUint64>(balance)?.decompress();
+                    let mut balance: FheUint64;
+                    // set CPU server key here for decompression operation for FHE ciphertext
+                    {
+                        let start = Instant::now();
+                        let cpu_server_key = compressed_fhe_server_key.clone().decompress();
+                        tracing::debug!("Decompressing server key to CPU took {:?}", start.elapsed());
+
+                        let start = Instant::now();
+                        set_server_key(cpu_server_key);
+                        tracing::debug!("Setting server key to CPU took {:?}", start.elapsed());
+
+                        let start = Instant::now();
+                        balance = bincode::deserialize::<CompressedFheUint64>(balance)?.decompress();
+                        tracing::debug!("Deserializing and decompressing balance took {:?}", start.elapsed());
+                    }
+
                     // TODO: add total supply overflow check
-                    total_supply + &balance
+
+                    let mut result: FheUint64;
+                    // set GPU server key here for FHE computation
+                    {
+                        let start = Instant::now();
+                        let gpu_server_key = compressed_fhe_server_key.clone().decompress_to_gpu();
+                        tracing::debug!("Decompressing server key to GPU took {:?}", start.elapsed());
+
+                        let start = Instant::now();
+                        set_server_key(gpu_server_key);
+                        tracing::debug!("Setting server key to GPU took {:?}", start.elapsed());
+
+                        let start = Instant::now();
+                        result = total_supply + &balance;
+                        tracing::debug!("Adding balance to total supply took {:?}", start.elapsed());
+                    }
+                    result
                 }
             }
         }
@@ -328,10 +373,17 @@ impl<S: sov_modules_api::Spec> Token<S> {
         // set CPU server key here for compression operation for FHE ciphertext
         let mut serialized_total_supply = Vec::new();
         {
-            let cpu_server_key = compressed_fhe_server_key.decompress();
-            set_server_key(cpu_server_key);
+            let start = Instant::now();
+            let cpu_server_key = compressed_fhe_server_key.clone().decompress();
+            tracing::debug!("Decompressing server key to CPU took {:?}", start.elapsed());
 
+            let start = Instant::now();
+            set_server_key(cpu_server_key);
+            tracing::debug!("Setting server key to CPU took {:?}", start.elapsed());
+
+            let start = Instant::now();
             serialized_total_supply = bincode::serialize(&total_supply.compress())?;
+            tracing::debug!("Serializing total supply took {:?}", start.elapsed());
         }
 
         let authorized_minters = unique_minters(authorized_minters);
