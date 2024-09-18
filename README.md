@@ -1,7 +1,7 @@
 # TMC (Trustless Modular Calculator)
 
 > [!IMPORTANT]  
-> To enable FHE modules, please visit `fhe-module` branch
+> To enable FHE modules, please visit [`fhe-module`](https://github.com/cyferio-labs/tmc/tree/fhe-modules) branch
 
 ## Overview
 
@@ -30,6 +30,12 @@ By leveraging FHE, advanced modular rollup designs, and parallelism in computati
   - Secure key management for FHE keys.
   - Robust FHE key generation and threshold decryption using MPC protocols.
 
+<p align="center">
+ <img src="assets/TMC_architecture.png" alt="TMC architecture"/>
+    <br>
+    <em>The Architecture of TMC</em>
+</p>
+
 ## Use Cases
 
 - **DeFi**:
@@ -47,6 +53,12 @@ By leveraging FHE, advanced modular rollup designs, and parallelism in computati
   - **Secure Interactions**: Operate nodes in a "dark forest" state for enhanced security.
   - **Asset Integration**: Flexible combination of DeFi and GameFi assets.
   - **Flexible Gas Fees**: Implement dynamic gas fee structures to lower entry barriers.
+
+<p align="center">
+ <img src="assets/TMC_flow.png" alt="TMC flow"/>
+    <br>
+    <em>The Workflow of TMC</em>
+</p>
 
 ## Getting Started
 
