@@ -46,25 +46,17 @@ ENV SKIP_GUEST_BUILD=1 \
 # Build node binary
 RUN --mount=type=ssh cargo build --release --bin node
 
-# Build starter-cli-wallet binary
-RUN --mount=type=ssh cargo build --release --bin starter-cli-wallet
+# Create FHE keys
+RUN --mount=type=ssh cargo run --release --bin fhe-keygen
 
-# Verify the binary exists
-RUN ls -la /usr/src/tmc-gpu-accel/target/release/
+# Generate request scripts for FHE module
+RUN --mount=type=ssh cargo run --release --bin request-scripts-gen
 
-# Disable the runtime image build
-# # Stage 2: Final runtime image
-# FROM nvidia/cuda:11.8.0-base-ubuntu20.04
+# CD into the crates/rollup directory
+WORKDIR /usr/src/tmc-gpu-accel/crates/rollup
 
-# # Set the working directory
-# WORKDIR /usr/local/bin/
+# Import keys for rollup and building wallet-cli
+RUN --mount=type=ssh make import-keys
 
-# # Copy the compiled binary from the builder stage
-# COPY --from=builder /usr/src/tmc-gpu-accel/target/release/node .
-
-# # Ensure the NVIDIA libraries are properly configured
-# ENV NVIDIA_VISIBLE_DEVICES all
-# ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
-
-# # Set the entrypoint to the compiled Rust binary
-# ENTRYPOINT ["./node"]
+# Set the working directory of container back to project root
+WORKDIR /usr/src/tmc-gpu-accel
