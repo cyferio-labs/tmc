@@ -332,7 +332,7 @@ impl<S: sov_modules_api::Spec> Token<S> {
             for (address, balance) in identities_and_balances.iter() {
                 balances.set(address, balance, state)?;
                 total_supply = {
-                    let mut balance: FheUint64;
+                    let mut balance_decompressed: FheUint64;
                     // set CPU server key here for decompression operation for FHE ciphertext
                     {
                         let start = Instant::now();
@@ -344,7 +344,7 @@ impl<S: sov_modules_api::Spec> Token<S> {
                         tracing::debug!("Setting server key to CPU took {:?}", start.elapsed());
 
                         let start = Instant::now();
-                        balance = bincode::deserialize::<CompressedFheUint64>(balance)?.decompress();
+                        balance_decompressed = bincode::deserialize::<CompressedFheUint64>(balance)?.decompress();
                         tracing::debug!("Deserializing and decompressing balance took {:?}", start.elapsed());
                     }
 
@@ -362,7 +362,7 @@ impl<S: sov_modules_api::Spec> Token<S> {
                         tracing::debug!("Setting server key to GPU took {:?}", start.elapsed());
 
                         let start = Instant::now();
-                        result = total_supply + &balance;
+                        result = total_supply + &balance_decompressed;
                         tracing::debug!("Adding balance to total supply took {:?}", start.elapsed());
                     }
                     result
