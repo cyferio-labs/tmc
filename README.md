@@ -64,4 +64,182 @@ By leveraging FHE, advanced modular rollup designs, and parallelism in computati
 
 Explore our demo at [beta.cyferio.com](https://beta.cyferio.com) and watch our [demo video](https://www.youtube.com/watch?v=iYxvFWpbi2s).
 
+# Rollup Starter for `sov_bank_fhe`
+
+This guide provides step-by-step instructions for setting up and interacting with the `sov_bank_fhe` module, which enables confidential token operations using Fully Homomorphic Encryption (FHE).
+
+## Prerequisites
+
+- **Rust and Cargo**: Ensure they are installed on your system.
+- **Project Code**: Clone or download the latest code from the `fhe-module` branch.
+- **Terminal Access**: Familiarity with terminal commands.
+
+## Setup
+
+### 1. Configure the Environment
+
+We use an optimistic-like rollup configuration since applying a zk prover to FHE is still under development.
+
+Set the following environment variables:
+
+```sh
+export SKIP_GUEST_BUILD=1
+export SOV_PROVER_MODE=skip
+```
+
+### 2. Set Up FHE Keys
+
+The rollup requires a set of keys: `{public key, server key, private key}`.
+
+> **Note**: For demo purposes, keys are stored insecurely in a JSON file. In production, store the public and server keys securely on-chain and the private key within the node.
+
+Generate the FHE keys:
+
+```sh
+# Run this command in the project root directory
+
+cargo run --release --bin fhe-keygen
+```
+
+### 3. Generate Call Messages for `sov_bank_fhe`
+
+These scripts will be used to invoke confidential operations like token creation, transfer, and minting.
+
+Generate the scripts:
+
+```sh
+# Run this command in the project root directory
+
+cargo run --release --bin request-scripts-gen
+```
+
+## Running the Node
+
+### 1. Navigate to the Rollup Directory
+
+```sh
+cd crates/rollup/
+```
+
+### 2. Clean the Database and Wallet (Optional)
+
+To start with a fresh rollup:
+
+```sh
+make clean-db
+make clean-wallet
+```
+
+> **Note**: Skip this step if you wish to retain the previous wallet setup.
+
+### 3. Start the Rollup Node
+
+Compile and start the rollup node:
+
+```sh
+# Ensure environment variables are set
+# Use --release for optimized performance
+
+cargo run --release --bin node
+```
+
+## Interacting with `sov_bank_fhe`
+
+### 1. Open a New Terminal
+
+- Navigate to the `crates/rollup/` directory.
+- Ensure the environment variables from the [configuration section](#1-configure-the-environment) are set.
+
+### 2. Build `sov-cli` and Import Keys
+
+Import the token deployer's keys from `test-data/keys/token_deployer_private_key.json`:
+
+```sh
+make import-keys
+```
+
+### 3. Query the FHE Public Key via RPC
+
+Retrieve the FHE public key for encrypting transactions:
+
+```sh
+make get-fhe-public-key
+```
+
+### 4. Create Confidential Tokens
+
+Create and mint 1,000 encrypted tokens to the address `sov1l6n...r94`:
+
+```sh
+# Wait 5–10 seconds for the transaction to complete
+
+make test-fhe-create-token
+```
+
+Monitor the server logs for FHE operations.
+
+### 5. Query the Total Supply of Tokens
+
+Fetch the total token supply:
+
+- **Encrypted (Ciphertext):**
+
+  ```sh
+  make test-fhe-bank-raw-supply-of
+  ```
+
+- **Decrypted (Plaintext):**
+
+  ```sh
+  make test-fhe-bank-supply-of
+  ```
+
+### 6. Mint Additional Confidential Tokens
+
+Mint an additional 500 encrypted tokens to the same address:
+
+```sh
+# Wait 5–10 seconds for the transaction to complete
+
+make test-fhe-mint-token
+```
+
+Verify the updated total supply as in the previous step.
+
+### 7. Transfer Confidential Tokens
+
+Transfer 100 encrypted tokens from `sov1l6n...r94` to `sov15vs...7gc`:
+
+```sh
+# Wait 5–10 seconds for the transaction to complete
+
+make test-fhe-token-transfer
+```
+
+### 8. Query User Balance via RPC
+
+Replace `"user_address": "ADDRESS_TO_QUERY"` with the desired address.
+
+#### Encrypted Balance (Ciphertext)
+
+```sh
+curl -sS -X POST -H "Content-Type: application/json" \
+-d '{"jsonrpc":"2.0","method":"fheBank_rawBalanceOf","params":{"user_address":"sov1l6n...r94", "token_id":"TOKEN_ID"},"id":1}' \
+http://127.0.0.1:12345
+```
+
+#### Decrypted Balance (Plaintext)
+
+```sh
+curl -sS -X POST -H "Content-Type: application/json" \
+-d '{"jsonrpc":"2.0","method":"fheBank_balanceOf","params":{"user_address":"sov1l6n...r94", "token_id":"TOKEN_ID"},"id":1}' \
+http://127.0.0.1:12345
+```
+
+## Notes
+
+- **Security Considerations**: This setup is for demo purposes. In production, implement secure key storage and management practices.
+- **Performance**: Use `--release` mode for faster FHE operations.
+- **Monitoring**: Check server logs to monitor FHE operations and transaction processing.
+
 Feel free to explore and contribute to the project. For any questions or issues, please open an issue or contact the maintainers.
