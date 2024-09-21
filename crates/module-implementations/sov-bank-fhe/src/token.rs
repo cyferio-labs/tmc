@@ -1,7 +1,6 @@
 #[cfg(feature = "native")]
 use core::str::FromStr;
 use std::collections::HashSet;
-use std::default;
 use std::fmt::Formatter;
 
 use anyhow::bail;
@@ -13,9 +12,8 @@ use sov_state::Prefix;
 use thiserror::Error;
 
 // FHE deps
-use std::time::Instant;
 use bincode;
-use tfhe::{prelude::*, set_server_key, CompressedFheUint64, FheUint64, PublicKey, CompressedServerKey};
+use tfhe::{prelude::*, CompressedFheUint64, FheUint64, PublicKey};
 
 /// Type alias to store an amount of token.
 // pub type Amount = u64;
@@ -277,7 +275,6 @@ impl<S: sov_modules_api::Spec> Token<S> {
         salt: u64,
         parent_prefix: &Prefix,
         fhe_public_key: &PublicKey,
-        compressed_fhe_server_key: &CompressedServerKey,
         state: &mut impl StateReaderAndWriter<User>,
     ) -> anyhow::Result<(TokenId, Self)> {
         let token_id = super::get_token_id::<S>(token_name, originator, salt);
@@ -288,7 +285,6 @@ impl<S: sov_modules_api::Spec> Token<S> {
             &token_id,
             parent_prefix,
             fhe_public_key,
-            compressed_fhe_server_key,
             state,
         )?;
         Ok((token_id, token))
@@ -302,95 +298,29 @@ impl<S: sov_modules_api::Spec> Token<S> {
         token_id: &TokenId,
         parent_prefix: &Prefix,
         fhe_public_key: &PublicKey,
-        compressed_fhe_server_key: &CompressedServerKey,
         state: &mut impl StateReaderAndWriter<User>,
     ) -> anyhow::Result<Token<S>> {
         let token_prefix = prefix_from_address_with_parent(parent_prefix, token_id);
         let balances = sov_modules_api::StateMap::new(token_prefix);
-        let mut total_supply: FheUint64;
-        let mut encrypted_zero: FheUint64;
 
-        // set GPU server key here for FHE computation
-        {
-            let start = Instant::now();
-            let gpu_server_key = compressed_fhe_server_key.clone().decompress_to_gpu();
-            tracing::debug!("Decompressing server key to GPU took {:?}", start.elapsed());
-
-            let start = Instant::now();
-            set_server_key(gpu_server_key);
-            tracing::debug!("Setting server key to GPU took {:?}", start.elapsed());
-
-            let start = Instant::now();
-            encrypted_zero = FheUint64::try_encrypt(0 as u64, fhe_public_key)?;
-            tracing::debug!("Encrypting zero took {:?}", start.elapsed());
-        }
-    
-        
-        total_supply = encrypted_zero;
-
-        {
-            for (address, balance) in identities_and_balances.iter() {
-                balances.set(address, balance, state)?;
-                total_supply = {
-                    let mut balance_decompressed: FheUint64;
-                    // set CPU server key here for decompression operation for FHE ciphertext
-                    {
-                        let start = Instant::now();
-                        let cpu_server_key = compressed_fhe_server_key.clone().decompress();
-                        tracing::debug!("Decompressing server key to CPU took {:?}", start.elapsed());
-
-                        let start = Instant::now();
-                        set_server_key(cpu_server_key);
-                        tracing::debug!("Setting server key to CPU took {:?}", start.elapsed());
-
-                        let start = Instant::now();
-                        balance_decompressed = bincode::deserialize::<CompressedFheUint64>(balance)?.decompress();
-                        tracing::debug!("Deserializing and decompressing balance took {:?}", start.elapsed());
-                    }
-
-                    // TODO: add total supply overflow check
-
-                    let mut result: FheUint64;
-                    // set GPU server key here for FHE computation
-                    {
-                        let start = Instant::now();
-                        let gpu_server_key = compressed_fhe_server_key.clone().decompress_to_gpu();
-                        tracing::debug!("Decompressing server key to GPU took {:?}", start.elapsed());
-
-                        let start = Instant::now();
-                        set_server_key(gpu_server_key);
-                        tracing::debug!("Setting server key to GPU took {:?}", start.elapsed());
-
-                        let start = Instant::now();
-                        result = total_supply + &balance_decompressed;
-                        tracing::debug!("Adding balance to total supply took {:?}", start.elapsed());
-                    }
-                    result
-                }
+        let encrypted_zero = FheUint64::try_encrypt(0 as u64, fhe_public_key)?;
+        let mut total_supply = encrypted_zero;
+        for (address, balance) in identities_and_balances.iter() {
+            balances.set(address, balance, state)?;
+            total_supply = {
+                let balance = bincode::deserialize::<CompressedFheUint64>(balance)?.decompress();
+                total_supply + &balance
             }
         }
 
-        // set CPU server key here for compression operation for FHE ciphertext
-        let mut serialized_total_supply = Vec::new();
-        {
-            let start = Instant::now();
-            let cpu_server_key = compressed_fhe_server_key.clone().decompress();
-            tracing::debug!("Decompressing server key to CPU took {:?}", start.elapsed());
-
-            let start = Instant::now();
-            set_server_key(cpu_server_key);
-            tracing::debug!("Setting server key to CPU took {:?}", start.elapsed());
-
-            let start = Instant::now();
-            serialized_total_supply = bincode::serialize(&total_supply.compress())?;
-            tracing::debug!("Serializing total supply took {:?}", start.elapsed());
-        }
+        // TODO: add total supply overflow check
+        let total_supply = bincode::serialize(&total_supply.compress())?;
 
         let authorized_minters = unique_minters(authorized_minters);
 
         Ok(Token::<S> {
             name: token_name.to_owned(),
-            total_supply: serialized_total_supply,
+            total_supply,
             balances,
             authorized_minters,
         })

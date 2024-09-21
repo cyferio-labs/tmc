@@ -1011,8 +1011,7 @@ checksum = "d3fd119d74b830634cea2a0f58bbd0d54540518a14397557951e79340abc28c0"
 [[package]]
 name = "concrete-csprng"
 version = "0.4.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90518357249582c16a6b64d7410243dfb3109d5bf0ad1665c058c9a59f2fc4cc"
+source = "git+https://github.com/zama-ai/tfhe-rs.git?tag=tfhe-rs-0.8.0-alpha.8#b93c23e5f87b29b3519712ae8071f435d9cf207a"
 dependencies = [
  "aes",
  "libc",
@@ -1021,13 +1020,14 @@ dependencies = [
 
 [[package]]
 name = "concrete-fft"
-version = "0.4.1"
+version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3144f883422ee22c65d4f408c11b3406513eadc0d50b3d65bfadcb97852817e0"
+checksum = "86ff7397e00e903afb03f0adca6a5f3bec3a6e96a7cdb70bdc088e01b125e170"
 dependencies = [
  "aligned-vec",
  "bytemuck",
  "dyn-stack",
+ "js-sys",
  "num-complex",
  "pulp",
  "serde",
@@ -1035,9 +1035,9 @@ dependencies = [
 
 [[package]]
 name = "concrete-ntt"
-version = "0.1.2"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4f4643dbd5de069e099122ae6c2bbd3db70d69ffec348dfc228448d635f949e"
+checksum = "bea708a14b4cfe650eec644eac11889a187404a3a0738a41a5524b0f548850a1"
 dependencies = [
  "aligned-vec",
  "pulp",
@@ -1565,9 +1565,9 @@ checksum = "0d6ef0072f8a535281e4876be788938b528e9a1d43900b82c2569af7da799125"
 
 [[package]]
 name = "dyn-stack"
-version = "0.9.1"
+version = "0.10.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7fe7f8d7bcc523381d3c437b82cf74805de3931de0da69309ae0fe1bdf7a256e"
+checksum = "56e53799688f5632f364f8fb387488dd05db9fe45db7011be066fc20e7027f8b"
 dependencies = [
  "bytemuck",
  "reborrow",
@@ -3272,9 +3272,9 @@ dependencies = [
 
 [[package]]
 name = "pulp"
-version = "0.18.21"
+version = "0.18.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0ec8d02258294f59e4e223b41ad7e81c874aa6b15bc4ced9ba3965826da0eed5"
+checksum = "a0a01a0dc67cf4558d279f0c25b0962bd08fc6dec0137699eae304103e882fe6"
 dependencies = [
  "bytemuck",
  "libm",
@@ -5040,9 +5040,8 @@ dependencies = [
 
 [[package]]
 name = "tfhe"
-version = "0.7.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "654a8bea9d6a503ebe16c8244c6a44ce924ed4c9c5a9a425fee5e021081243db"
+version = "0.8.0-alpha.8"
+source = "git+https://github.com/zama-ai/tfhe-rs.git?tag=tfhe-rs-0.8.0-alpha.8#b93c23e5f87b29b3519712ae8071f435d9cf207a"
 dependencies = [
  "aligned-vec",
  "bincode",
@@ -5064,9 +5063,8 @@ dependencies = [
 
 [[package]]
 name = "tfhe-cuda-backend"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc18ed38810d8929567329e76a3a4bf943de7013de9f0d86ae3b7373f944a767"
+version = "0.4.0-alpha.1"
+source = "git+https://github.com/zama-ai/tfhe-rs.git?tag=tfhe-rs-0.8.0-alpha.8#b93c23e5f87b29b3519712ae8071f435d9cf207a"
 dependencies = [
  "cmake",
  "pkg-config",
@@ -5075,8 +5073,7 @@ dependencies = [
 [[package]]
 name = "tfhe-versionable"
 version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9c7f9c9ef59d138c8ee539da0e15daf73345f0969a718f48bfd78706e4948e92"
+source = "git+https://github.com/zama-ai/tfhe-rs.git?tag=tfhe-rs-0.8.0-alpha.8#b93c23e5f87b29b3519712ae8071f435d9cf207a"
 dependencies = [
  "aligned-vec",
  "num-complex",
@@ -5087,8 +5084,7 @@ dependencies = [
 [[package]]
 name = "tfhe-versionable-derive"
 version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4709d2c6e0a39b45ed752f4b1151e261cc43c9681cacad00be4ecfc5df655e5c"
+source = "git+https://github.com/zama-ai/tfhe-rs.git?tag=tfhe-rs-0.8.0-alpha.8#b93c23e5f87b29b3519712ae8071f435d9cf207a"
 dependencies = [
  "proc-macro2",
  "quote",

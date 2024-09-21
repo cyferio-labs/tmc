@@ -92,8 +92,10 @@ impl<S: sov_modules_api::Spec> Bank<S> {
         let fhe_public_key =
             bincode::deserialize::<CompressedPublicKey>(&self.fhe_public_key.get(state)?.unwrap())?
                 .decompress();
-        let compressed_fhe_server_key =
-            bincode::deserialize::<CompressedServerKey>(&self.fhe_server_key.get(state)?.unwrap())?;
+        let gpu_server_key =
+            bincode::deserialize::<CompressedServerKey>(&self.fhe_server_key.get(state)?.unwrap())?
+                .decompress_to_gpu();
+        set_server_key(gpu_server_key);
 
         let (token_id, token) = Token::<S>::create(
             &token_name,
@@ -103,7 +105,6 @@ impl<S: sov_modules_api::Spec> Bank<S> {
             salt,
             self.tokens.prefix(),
             &fhe_public_key,
-            &compressed_fhe_server_key,
             state,
         )?;
 
@@ -205,10 +206,10 @@ impl<S: sov_modules_api::Spec> Bank<S> {
         let fhe_public_key =
             bincode::deserialize::<CompressedPublicKey>(&self.fhe_public_key.get(state)?.unwrap())?
                 .decompress();
-        let compressed_fhe_server_key =
-            bincode::deserialize::<CompressedServerKey>(&self.fhe_server_key.get(state)?.unwrap())?;
-        let fhe_server_key = compressed_fhe_server_key.decompress();
-        set_server_key(fhe_server_key);
+        let gpu_server_key =
+            bincode::deserialize::<CompressedServerKey>(&self.fhe_server_key.get(state)?.unwrap())?
+                .decompress_to_gpu();
+        set_server_key(gpu_server_key);
 
         let authorizer = authorizer.as_token_holder();
         token
@@ -295,10 +296,10 @@ impl<S: sov_modules_api::Spec> Bank<S> {
         let fhe_public_key =
             bincode::deserialize::<CompressedPublicKey>(&self.fhe_public_key.get(state)?.unwrap())?
                 .decompress();
-        let compressed_fhe_server_key =
-            bincode::deserialize::<CompressedServerKey>(&self.fhe_server_key.get(state)?.unwrap())?;
-        let fhe_server_key = compressed_fhe_server_key.decompress();
-        set_server_key(fhe_server_key);
+        let gpu_server_key =
+            bincode::deserialize::<CompressedServerKey>(&self.fhe_server_key.get(state)?.unwrap())?
+                .decompress_to_gpu();
+        set_server_key(gpu_server_key);
 
         let token = self
             .tokens
@@ -332,11 +333,11 @@ impl<S: sov_modules_api::Spec> Bank<S> {
         };
 
         // Fetch the fhe keys from state and set the server key in the environment
-        let fhe_server_key =
+        let gpu_server_key =
             bincode::deserialize::<CompressedServerKey>(&self.fhe_server_key.get(state)?.unwrap())
                 .unwrap()
                 .decompress_to_gpu();
-        set_server_key(fhe_server_key);
+        set_server_key(gpu_server_key);
 
         // decrypt the balance from FheUint64 to u64
         let balance = mock_decryption::decrypt(&raw_balance);
@@ -381,11 +382,11 @@ impl<S: sov_modules_api::Spec> Bank<S> {
             .unwrap();
 
         // Fetch the fhe keys from state and set the server key in the environment
-        let fhe_server_key =
+        let gpu_server_key =
             bincode::deserialize::<CompressedServerKey>(&self.fhe_server_key.get(state)?.unwrap())
                 .unwrap()
                 .decompress_to_gpu();
-        set_server_key(fhe_server_key);
+        set_server_key(gpu_server_key);
 
         // decrypt the total supply from FheUint64 to u64
         let total_supply = mock_decryption::decrypt(&raw_total_supply);
