@@ -82,11 +82,9 @@ impl FheKeyGenConfig {
 }
 
 pub fn fhe_key_gen() -> FheKeyGenConfig {
-    let config = ConfigBuilder::with_custom_parameters(
-        PARAM_GPU_MULTI_BIT_MESSAGE_2_CARRY_2_GROUP_3_KS_PBS,
-        None,
-    )
-    .build();
+    let config =
+        ConfigBuilder::with_custom_parameters(PARAM_GPU_MULTI_BIT_MESSAGE_2_CARRY_2_GROUP_3_KS_PBS)
+            .build();
     let client_key = ClientKey::generate(config);
     let compressed_public_key = CompressedPublicKey::new(&client_key);
     let compressed_server_key = CompressedServerKey::new(&client_key);
