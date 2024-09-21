@@ -23,7 +23,12 @@ sov-modules-api = { workspace = true }
 sov-state = { workspace = true }
 
 # FHE depencencies
-tfhe = { workspace = true }
+[target.'cfg(all(target_arch = "x86_64", unix))'.dependencies]
+tfhe = { version = "0.7.2", features = ["boolean", "shortint", "integer", "x86_64-unix"] }
+[target.'cfg(all(target_arch = "x86_64", not(unix)))'.dependencies]
+tfhe = { version = "0.7.2", features = ["boolean", "shortint", "integer", "x86_64"] }
+[target.'cfg(all(target_arch = "aarch64", unix))'.dependencies]
+tfhe = { version = "0.7.2", features = ["boolean", "shortint", "integer", "aarch64-unix"] }
 bincode = { workspace = true }
 serde_json = { workspace = true }
 
