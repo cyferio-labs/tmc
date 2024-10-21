@@ -1,11 +1,8 @@
 use super::tx_status::{TxStatus, TxStatusNotifier};
 use super::{AcceptTxResponse, SubmittedBatchInfo};
-use anyhow::anyhow;
 use anyhow::Context;
-use fastcrypto::hash::HashFunction;
 use futures::StreamExt;
 use serde::de::DeserializeOwned;
-use shared_crypto::intent::{Intent, IntentMessage};
 use sov_db::ledger_db::LedgerDb;
 use sov_modules_api::capabilities::Authenticator;
 use sov_modules_api::{Batch, RawTx, TxReceiptContents};
@@ -17,25 +14,10 @@ use sov_rollup_interface::services::da::DaService;
 use sov_rollup_interface::TxHash;
 use std::marker::PhantomData;
 use std::sync::Arc;
-use sui_json_rpc_types::SuiTransactionBlockResponseOptions;
-use sui_sdk::rpc_types::SuiObjectDataOptions;
-use sui_sdk::types::{
-    base_types::{ObjectID, SequenceNumber, SuiAddress},
-    crypto::SuiKeyPair,
-    programmable_transaction_builder::ProgrammableTransactionBuilder,
-    transaction::{Argument, CallArg, Command, ObjectArg, ProgrammableMoveCall, TransactionData},
-    Identifier,
-};
-use sui_sdk::SuiClientBuilder;
-use sui_types::crypto::DefaultHash;
-use sui_types::crypto::KeypairTraits;
-use sui_types::crypto::Signer;
-use sui_types::signature::GenericSignature;
 use tokio::sync::{oneshot, Mutex};
 use tokio_stream::wrappers::BroadcastStream;
 use tracing::info;
 
-use base58::{FromBase58, ToBase58};
 use hex;
 /// A bunch of associated types that define the behavior of a [`Sequencer`].
 pub trait SequencerSpec: Clone + Send + Sync + 'static {
@@ -193,217 +175,7 @@ impl<Ss: SequencerSpec> Sequencer<Ss> {
                 },
             );
         }
-
-        let digest = da_tx_id.as_ref().to_base58();
-
-        // 将 Base58 字符串解码回 Vec<u8>
-        // let digest: String = base58_string
-        //     .from_base58()
-        //     .map_err(|e| anyhow!("Failed to decode Base58: {:?}", e))?;
-
-        // 验证长度
-        // if digest.len() != 32 {
-        //     return Err(anyhow!(
-        //         "Decoded bytes must have length 32, but it has {}",
-        //         digest.len()
-        //     ));
-        // }
-
-        println!("Digest as String: {:?}", digest);
-        // println!("Base58 encoded: {}", base58_string);
-
-        // let digest_array: [u8; 32] = digest
-        //     .try_into()
-        //     .map_err(|_| anyhow!("Digest must be exactly 32 bytes"))?;
-
-        match self.record_transaction_to_sui_da(da_height, digest).await {
-            Ok(_) => println!("Transaction sent successfully"),
-            Err(e) => anyhow::bail!("failed to submit batch: {}", e),
-        };
         Ok(SubmittedBatchInfo { da_height, num_txs })
-    }
-
-    /// Records a transaction to the Sui DA (Data Availability) layer.
-    ///
-    /// This function takes the DA height and a serialized batch, and attempts to record
-    /// the transaction on the Sui network.
-    ///
-    /// # Arguments
-    ///
-    /// * `self` - The current instance of the Sequencer.
-    /// * `da_height` - The current height of the DA layer.
-    /// * `serialized_batch` - The serialized batch of transactions to be recorded.
-    ///
-    /// # Returns
-    ///
-    /// Returns a `Result<(), anyhow::Error>`. On success, returns `Ok(())`. On failure,
-    /// returns an `Err` containing the error details.
-    ///
-    /// # Errors
-    ///
-    /// This function will return an error if:
-    /// - There's a failure in connecting to the Sui network.
-    /// - The transaction execution fails on the Sui network.
-    pub async fn record_transaction_to_sui_da(
-        &self,
-        da_height: u64,
-        digest: String,
-    ) -> Result<(), anyhow::Error> {
-        // 1) 获取 Sui 客户端
-        let sui_client = SuiClientBuilder::default().build_testnet().await?;
-
-        // let node_client_url = "https://rpc-testnet.suiscan.xyz:443";
-        // let sui_client = SuiClientBuilder::default()
-        //     .build(node_client_url)
-        //     .await
-        //     .map_err(|e| anyhow!("Failed to create Sui client: {:?}", e))?;
-
-        // 验证连接
-        let _ = sui_client
-            .read_api()
-            .get_reference_gas_price()
-            .await
-            .map_err(|e| anyhow!("Failed to connect to Sui network: {:?}", e))?;
-
-        println!("Successfully connected to Sui network");
-
-        let private_key_str =
-            "suiprivkey1qzlmtflas9pd0lqxr7wyx9u7rdczm2w9ecax2fkwmgx3y407zelj2dz8024";
-
-        let sui_keypair =
-            SuiKeyPair::decode(private_key_str).map_err(|e| anyhow!("解码失败: {:?}", e))?;
-
-        // 确保是 Ed25519 类型
-        let ed25519_keypair = match sui_keypair {
-            SuiKeyPair::Ed25519(keypair) => keypair,
-            _ => return Err(anyhow!("解码的密钥对不是 Ed25519 类型")),
-        };
-
-        let pk = ed25519_keypair.public();
-        println!("公钥: {:?}", pk);
-
-        let sender = SuiAddress::try_from(pk).map_err(|e| anyhow!("地址转换失败: {:?}", e))?;
-        println!("Sender: {:?}", sender);
-
-        // 获取 gas_coin
-        let gas_coin = sui_client
-            .coin_read_api()
-            .get_coins(sender, None, None, None)
-            .await?
-            .data
-            .into_iter()
-            .next()
-            .ok_or(anyhow!("未找到发送者的 coin"))?;
-
-        // 获取 Walrusda 对象
-        let walrus_da_object_id = ObjectID::from_hex_literal(
-            "0xc8940506fb0cb18c593c8fcfb4ecc1d1785433e6ecf05c6082ec55bae84e3089",
-        )?;
-
-        let sui_data_options = SuiObjectDataOptions::default();
-
-        // 在交易执行前立即获取最新的对象信息
-        let walrus_da_object_with_options = sui_client
-            .read_api()
-            .get_object_with_options(walrus_da_object_id, sui_data_options.clone())
-            .await?;
-
-        let (object_id, version, _digest) =
-            walrus_da_object_with_options.object().unwrap().object_ref();
-
-        let past_walrus_da_object = sui_client
-            .read_api()
-            .try_get_parsed_past_object(object_id, version, sui_data_options.clone())
-            .await?;
-        println!(" *** Past Object *** ");
-        println!("{:?}", past_walrus_da_object);
-        println!(" *** Past Object ***\n");
-
-        let sui_get_past_object_request = past_walrus_da_object.clone().into_object()?;
-
-        let walrus_da_object = CallArg::Object(ObjectArg::SharedObject {
-            id: sui_get_past_object_request.object_id,
-            initial_shared_version: SequenceNumber::from(83961839u64),
-            mutable: true,
-        });
-
-        println!(
-            "initial_shared_version: {:?}",
-            sui_get_past_object_request.version.clone()
-        );
-
-        let da_height_argument = CallArg::Pure(bcs::to_bytes(&da_height)?);
-        let digest_argument = CallArg::Pure(bcs::to_bytes(&digest.into_bytes())?);
-
-        let mut builder = ProgrammableTransactionBuilder::new();
-        builder.input(walrus_da_object)?;
-        builder.input(da_height_argument)?;
-        builder.input(digest_argument)?;
-
-        let pkg_id = "0xf5f020611fad3fbb77d687671cce437874c88c319531a9019141c93ffe6c6a8e";
-        let package = ObjectID::from_hex_literal(pkg_id)?;
-        let module = Identifier::new("walrus_da_system")?;
-        let function = Identifier::new("add_blob")?;
-
-        builder.command(Command::MoveCall(Box::new(ProgrammableMoveCall {
-            package,
-            module,
-            function,
-            type_arguments: vec![],
-            arguments: vec![
-                Argument::Input(0), // Walrusda object
-                Argument::Input(1), // da_height
-                Argument::Input(2), // digest
-            ],
-        })));
-        let ptb = builder.finish();
-
-        let gas_budget = 100_000_000;
-        let gas_price = sui_client.read_api().get_reference_gas_price().await?;
-
-        // 创建交易数据
-        let tx_data = TransactionData::new_programmable(
-            sender,
-            vec![gas_coin.object_ref()],
-            ptb,
-            gas_budget,
-            gas_price,
-        );
-
-        // 计算需要签名的摘要
-        let intent_msg = IntentMessage::new(Intent::sui_transaction(), tx_data);
-        let raw_tx = bcs::to_bytes(&intent_msg).expect("bcs should not fail");
-        let mut hasher = DefaultHash::default();
-        hasher.update(raw_tx.clone());
-        let digest = hasher.finalize().digest;
-        let sui_sig = ed25519_keypair.sign(&digest);
-
-        println!("Executing the transaction...");
-        match sui_client
-            .quorum_driver_api()
-            .execute_transaction_block(
-                sui_types::transaction::Transaction::from_generic_sig_data(
-                    intent_msg.value,
-                    vec![GenericSignature::Signature(sui_sig)],
-                ),
-                SuiTransactionBlockResponseOptions::default(),
-                None,
-            )
-            .await
-        {
-            Ok(transaction_response) => {
-                println!(
-                    "Transaction executed. Transaction digest: {}",
-                    transaction_response.digest.base58_encode()
-                );
-                println!("{}", transaction_response);
-                Ok(())
-            }
-            Err(e) => {
-                println!("Error executing transaction: {:?}", e);
-                Err(anyhow!("Transaction execution failed: {:?}", e))
-            }
-        }
     }
 
     /// See [`BatchBuilder::accept_tx`].

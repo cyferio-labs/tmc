@@ -5,7 +5,6 @@ resolver = "2"
 members = [
     "crates/rollup",
     "crates/stf",
-    "crates/adapters/sui",
     "crates/full-node/sov-sequencer",
     "crates/module-system/sov-modules-rollup-blueprint",
     "crates/module-system/sov-test-utils",

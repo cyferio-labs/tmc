@@ -33,6 +33,15 @@ impl CyferioBlock {
             },
         }
     }
+
+    pub fn new(header: CyferioHeader) -> Self {
+        Self {
+            header,
+            validity_cond: Default::default(),
+            batch_blobs: Vec::new(),
+            proof_blobs: Vec::new(),
+        }
+    }
 }
 
 impl SlotData for CyferioBlock {
@@ -42,7 +51,7 @@ impl SlotData for CyferioBlock {
     fn hash(&self) -> [u8; 32] {
         self.header.state_root.into()
     }
-    
+
     fn header(&self) -> &Self::BlockHeader {
         &self.header
     }

@@ -1,9 +1,9 @@
-use hex;
 use subxt::{
     utils::{AccountId32, MultiAddress},
     OnlineClient, SubstrateConfig,
 };
 use subxt_signer::sr25519::dev;
+use hex;
 
 // Generate an interface that we can use from the node's metadata.
 #[subxt::subxt(runtime_metadata_path = "./src/metadata.scale")]
@@ -14,8 +14,7 @@ type StatemintConfig = SubstrateConfig;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create a new API client, configured to talk to the local node.
-    let api: OnlineClient<SubstrateConfig> =
-        OnlineClient::<StatemintConfig>::from_url("ws://127.0.0.1:9944").await?;
+    let api: OnlineClient<SubstrateConfig> = OnlineClient::<StatemintConfig>::from_url("ws://127.0.0.1:9944").await?;
 
     // let alice: MultiAddress<AccountId32, ()> = dev::alice().public_key().into();
     // let alice_pair_signer = dev::alice();
@@ -49,6 +48,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     //     println!("Task submitted successfully: {event:?}");
     // }
 
+
     let mut blocks_sub = api.blocks().subscribe_finalized().await?;
 
     // For each block, print a bunch of information about it:
@@ -58,41 +58,42 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let block_number = block.header().number;
         let block_hash = block.hash();
 
-        // println!("Block #{block_number}:");
-        // println!("  Hash: {block_hash}");
-        // println!("  Extrinsics:");
+        println!("Block #{block_number}:");
+        println!("  Hash: {block_hash}");
+        println!("  Extrinsics:");
 
         // Log each of the extrinsic with it's associated events:
         let extrinsics = block.extrinsics().await?;
         for ext in extrinsics.iter() {
-            let ext = ext?; // Unwrap the Result
             let idx = ext.index();
             let events = ext.events().await?;
             let bytes_hex = format!("0x{}", hex::encode(ext.bytes()));
 
             // See the API docs for more ways to decode extrinsics:
-            let decoded_ext = ext.as_root_extrinsic::<substrate::Call>();
+            let decoded_ext = ext.as_root_extrinsic::<SubstrateConfig::Call>();
 
-            // println!("    Extrinsic #{idx}:");
-            // println!("      Bytes: {bytes_hex}");
-            // println!("      Decoded: {decoded_ext:?}");
+            println!("    Extrinsic #{idx}:");
+            println!("      Bytes: {bytes_hex}");
+            println!("      Decoded: {decoded_ext:?}");
 
-            // Extract the "now" value from the decoded extrinsic
-            if let Ok(substrate::Call::Timestamp(substrate::timestamp::Call::set { now })) =
-                decoded_ext
-            {
-                println!("      Timestamp now: {}", now);
-            }
-
-            // println!("      Events:");
+            println!("      Events:");
             for evt in events.iter() {
                 let evt = evt?;
                 let pallet_name = evt.pallet_name();
                 let event_name = evt.variant_name();
                 let event_values = evt.field_values()?;
 
-                // println!("        {pallet_name}_{event_name}");
-                // println!("          {}", event_values);
+                println!("        {pallet_name}_{event_name}");
+                println!("          {}", event_values);
+            }
+
+            println!("      Signed Extensions:");
+            if let Some(signed_extensions) = ext.signed_extensions() {
+                for signed_extension in signed_extensions.iter() {
+                    let name = signed_extension.name();
+                    let value = signed_extension.value()?.to_string();
+                    println!("        {name}: {value}");
+                }
             }
         }
     }

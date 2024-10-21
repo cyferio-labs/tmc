@@ -36,4 +36,3 @@ impl DaSpec for CyferioDaLayerSpec {
     type CompletenessProof = ();
     type ChainParams = ();
 }
-
