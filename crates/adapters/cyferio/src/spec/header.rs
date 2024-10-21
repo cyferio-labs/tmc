@@ -1,8 +1,10 @@
 use serde::{Deserialize, Serialize};
 use sov_rollup_interface::da::BlockHeaderTrait;
-use sp_runtime::traits::Header as SubstrateHeader;
 
 use super::hash::CyferioHash;
+
+const KATE_START_TIME: i64 = 1686066440;
+const KATE_SECONDS_PER_BLOCK: i64 = 20;
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct CyferioHeader {
@@ -11,6 +13,20 @@ pub struct CyferioHeader {
     pub state_root: CyferioHash,
     pub extrinsics_root: CyferioHash,
     pub digest: Vec<u8>,
+    pub timestamp: u64,
+}
+
+impl CyferioHeader {
+    fn new(header: CyferioHeader) -> Self {
+        Self {
+            number: header.number,
+            parent_hash: header.parent_hash,
+            state_root: header.state_root,
+            extrinsics_root: header.extrinsics_root,
+            digest: header.digest,
+            timestamp: header.timestamp,
+        }
+    }
 }
 
 impl BlockHeaderTrait for CyferioHeader {
@@ -21,15 +37,7 @@ impl BlockHeaderTrait for CyferioHeader {
     }
 
     fn hash(&self) -> Self::Hash {
-        // Implement the hashing logic for the header
-        // This is a placeholder implementation
-        let mut hasher = sha2::Sha256::new();
-        hasher.update(&self.number.to_le_bytes());
-        hasher.update(self.parent_hash.as_ref());
-        hasher.update(self.state_root.as_ref());
-        hasher.update(self.extrinsics_root.as_ref());
-        hasher.update(&self.digest);
-        CyferioHash(hasher.finalize().into())
+        self.state_root.clone()
     }
 
     fn height(&self) -> u64 {
@@ -37,9 +45,24 @@ impl BlockHeaderTrait for CyferioHeader {
     }
 
     fn time(&self) -> sov_rollup_interface::da::Time {
-        // Implement the time logic for the header
-        // This is a placeholder implementation
-        sov_rollup_interface::da::Time::from_secs(0)
+        sov_rollup_interface::da::Time::from_secs(
+            KATE_SECONDS_PER_BLOCK
+                .saturating_mul(self.timestamp as i64)
+                .saturating_add(KATE_START_TIME),
+        )
     }
 }
 
+impl Default for CyferioHeader {
+    fn default() -> Self {
+        Self {
+            number: 0,
+            parent_hash: CyferioHash::default(),
+            state_root: CyferioHash::default(),
+            extrinsics_root: CyferioHash::default(),
+            digest: Vec::new(),
+            timestamp: 0,
+            // 可以根据需要设置其他默认值
+        }
+    }
+}

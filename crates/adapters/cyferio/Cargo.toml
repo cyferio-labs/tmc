@@ -4,49 +4,46 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+borsh = { workspace = true, features = ["bytes"] }
 sov-rollup-interface = { workspace = true }
-substrate-api-client = { version = "0.18.0", default-features = false, features = [
-    "std",
-    "staking-xt",
-    "contracts-xt",
-    "disable-metadata-hash-check",
-] }
-serde = { version = "1.0", features = ["derive"] }
-anyhow = "1.0"
-async-trait = "0.1"
-borsh = "0.10"
-futures = "0.3"
-tracing = "0.1"
-thiserror = "1.0"
-hex = "0.4"
-sha2 = "0.10"
+bytes = { version = "1.2.1", features = ["serde"] }
+primitive-types = { version = "0.12.2", features = ["serde"] }
+sp-core-hashing = "16.0.0"
+subxt = { version = "0.29", optional = true }
+avail-subxt = { git = "https://github.com/availproject/avail.git", tag = "v1.6.3", features = ["std"], optional = true }
+codec = { package = "parity-scale-codec", version = "3.0.0", default-features = false, features = ["derive", "full", "bit-vec"], optional = true }
+derive_more = "0.99.17"
+sha2 = "0.10.6"
 
-
-
-codec = { package = "parity-scale-codec", version = "3.6.1", features = ['derive'] }
-env_logger = "0.11"
-log = "0.4.14"
-serde_json = "1.0.79"
-tokio = { version = "1.24", features = ["rt-multi-thread", "macros", "time"] }
-tokio-util = "0.7.8"
-wabt = "0.10.0"
-frame-support = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
-frame-system = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
-rococo-runtime = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
-pallet-balances = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
-pallet-identity = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
-pallet-recovery = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
-pallet-staking = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
-sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
-sp-keyring = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
-sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
-sp-weights = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
-sp-std = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
+# Convenience
+tokio = { workspace = true, optional = true }
+futures = { workspace = true, optional = true }
+tracing = { workspace = true }
+tracing-subscriber = { version = "0.3.17", features = ["fmt"] }
+async-trait = { workspace = true }
+anyhow = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+reqwest = { workspace = true, features = ["rustls-tls", "json"], default-features = false, optional = true }
+thiserror = { workspace = true }
+sp-keyring = { version = "24", optional = true }
+sp-core = { version = "21", optional = true }
+hex = { workspace = true }
 
 [[bin]]
 name = "test"
 path = "src/main.rs"
 
 [features]
-default = []
-native = ["sov-rollup-interface/native"]
+default = ["native"]
+native = [
+    "dep:avail-subxt",
+    "dep:codec",
+    "dep:futures",
+    "dep:reqwest",
+    "dep:sp-core",
+    "dep:sp-keyring",
+    "dep:subxt",
+    "dep:tokio",
+    "sov-rollup-interface/native",
+]

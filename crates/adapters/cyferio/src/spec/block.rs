@@ -3,8 +3,9 @@ use super::transaction::CyferioBlobTransaction;
 use crate::validity_condition::CyferioValidityCond;
 use serde::{Deserialize, Serialize};
 use sov_rollup_interface::da::{DaProof, RelevantBlobs, RelevantProofs};
+use sov_rollup_interface::services::da::SlotData;
 
-#[derive(Serialize, Deserialize, Default, PartialEq, Debug, Clone)]
+#[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct CyferioBlock {
     pub header: CyferioHeader,
     pub validity_cond: CyferioValidityCond,
@@ -30,6 +31,34 @@ impl CyferioBlock {
                 inclusion_proof: Default::default(),
                 completeness_proof: Default::default(),
             },
+        }
+    }
+}
+
+impl SlotData for CyferioBlock {
+    type BlockHeader = CyferioHeader;
+    type Cond = CyferioValidityCond;
+
+    fn hash(&self) -> [u8; 32] {
+        self.header.state_root.into()
+    }
+    
+    fn header(&self) -> &Self::BlockHeader {
+        &self.header
+    }
+
+    fn validity_condition(&self) -> CyferioValidityCond {
+        self.validity_cond.clone()
+    }
+}
+
+impl Default for CyferioBlock {
+    fn default() -> Self {
+        Self {
+            header: Default::default(),
+            validity_cond: Default::default(),
+            batch_blobs: Vec::new(),
+            proof_blobs: Vec::new(),
         }
     }
 }

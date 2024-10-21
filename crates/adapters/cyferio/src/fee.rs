@@ -14,14 +14,14 @@ impl CyferioFee {
 }
 
 impl Fee for CyferioFee {
-    type FeeRate = u128;
+    type FeeRate = u64;
 
     fn fee_rate(&self) -> Self::FeeRate {
-        self.0
+        self.0 as u64
     }
 
     fn set_fee_rate(&mut self, rate: Self::FeeRate) {
-        self.0 = rate;
+        self.0 = rate as u128;
     }
 
     fn gas_estimate(&self) -> u64 {
