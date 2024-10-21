@@ -1,0 +1,52 @@
+[package]
+name = "sov-cyferio-hub"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sov-rollup-interface = { workspace = true }
+substrate-api-client = { version = "0.18.0", default-features = false, features = [
+    "std",
+    "staking-xt",
+    "contracts-xt",
+    "disable-metadata-hash-check",
+] }
+serde = { version = "1.0", features = ["derive"] }
+anyhow = "1.0"
+async-trait = "0.1"
+borsh = "0.10"
+futures = "0.3"
+tracing = "0.1"
+thiserror = "1.0"
+hex = "0.4"
+sha2 = "0.10"
+
+
+
+codec = { package = "parity-scale-codec", version = "3.6.1", features = ['derive'] }
+env_logger = "0.11"
+log = "0.4.14"
+serde_json = "1.0.79"
+tokio = { version = "1.24", features = ["rt-multi-thread", "macros", "time"] }
+tokio-util = "0.7.8"
+wabt = "0.10.0"
+frame-support = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
+frame-system = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
+rococo-runtime = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
+pallet-balances = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
+pallet-identity = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
+pallet-recovery = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
+pallet-staking = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
+sp-core = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
+sp-keyring = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
+sp-runtime = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
+sp-weights = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
+sp-std = { git = "https://github.com/paritytech/polkadot-sdk.git", rev = "21b3a46b" }
+
+[[bin]]
+name = "test"
+path = "src/main.rs"
+
+[features]
+default = []
+native = ["sov-rollup-interface/native"]

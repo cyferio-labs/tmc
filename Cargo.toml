@@ -9,6 +9,7 @@ members = [
     "crates/full-node/sov-sequencer",
     "crates/module-system/sov-modules-rollup-blueprint",
     "crates/module-system/sov-test-utils",
+    "crates/adapters/cyferio",
 ]
 
 [workspace.package]
@@ -130,3 +131,6 @@ fastcrypto = { git = "https://github.com/MystenLabs/fastcrypto", rev = "b1ff61a2
 sui-json-rpc-types = { git = "https://github.com/mystenlabs/sui" }
 sui-types = { git = "https://github.com/mystenlabs/sui" }
 shared-crypto = { git = "https://github.com/mystenlabs/sui" }
+
+# cyferio hub
+sov-cyferio-hub = { path = "./crates/adapters/cyferio" }
