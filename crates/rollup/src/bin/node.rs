@@ -3,19 +3,17 @@
 use anyhow::Context;
 use clap::Parser;
 
-#[cfg(feature = "celestia_da")]
-use sov_celestia_adapter::CelestiaConfig;
 #[cfg(feature = "mock_da")]
 use sov_mock_da::MockDaConfig;
-#[cfg(feature = "sui_da")]
-use sov_sui_da::service::SuiConfig;
 
-#[cfg(feature = "celestia_da")]
-use sov_rollup_starter::celestia_rollup::CelestiaRollup;
 #[cfg(feature = "mock_da")]
 use sov_rollup_starter::mock_rollup::MockRollup;
-#[cfg(feature = "sui_da")]
-use sov_rollup_starter::sui_rollup::SuiRollup;
+
+#[cfg(feature = "cyferio_da")]
+use sov_cyferio_hub::service::CyferioConfig;
+
+#[cfg(feature = "cyferio_da")]
+use sov_rollup_starter::cyferio_rollup::CyferioRollup;
 
 use sov_kernels::basic::BasicKernelGenesisConfig;
 use sov_kernels::basic::BasicKernelGenesisPaths;
@@ -35,19 +33,6 @@ use tracing_subscriber::{fmt, EnvFilter};
 #[cfg(all(feature = "mock_da", feature = "celestia_da"))]
 compile_error!("Both mock_da and celestia_da are enabled, but only one should be.");
 
-#[cfg(all(feature = "mock_da", feature = "sui_da"))]
-compile_error!("Both mock_da and sui_da are enabled, but only one should be.");
-
-#[cfg(all(feature = "celestia_da", feature = "sui_da"))]
-compile_error!("Both celestia_da and sui_da are enabled, but only one should be.");
-
-#[cfg(all(feature = "sui_da", not(feature = "mock_da")))]
-const DEFAULT_CONFIG_PATH: &str = "../../sui_rollup_config.toml";
-#[cfg(all(feature = "sui_da", not(feature = "mock_da")))]
-const DEFAULT_GENESIS_PATH: &str = "../../test-data/genesis/sui/";
-#[cfg(all(feature = "sui_da", not(feature = "mock_da")))]
-const DEFAULT_KERNEL_GENESIS_PATH: &str = "../../test-data/genesis/sui/chain_state.json";
-
 // config and genesis for mock da
 #[cfg(all(feature = "mock_da", not(feature = "celestia_da")))]
 const DEFAULT_CONFIG_PATH: &str = "../../rollup_config.toml";
@@ -56,13 +41,13 @@ const DEFAULT_GENESIS_PATH: &str = "../../test-data/genesis/mock/";
 #[cfg(all(feature = "mock_da", not(feature = "celestia_da")))]
 const DEFAULT_KERNEL_GENESIS_PATH: &str = "../../test-data/genesis/mock/chain_state.json";
 
-// config and genesis for local docker celestia
-#[cfg(all(feature = "celestia_da", not(feature = "mock_da")))]
-const DEFAULT_CONFIG_PATH: &str = "../../celestia_rollup_config.toml";
-#[cfg(all(feature = "celestia_da", not(feature = "mock_da")))]
-const DEFAULT_GENESIS_PATH: &str = "../../test-data/genesis/celestia/";
-#[cfg(all(feature = "celestia_da", not(feature = "mock_da")))]
-const DEFAULT_KERNEL_GENESIS_PATH: &str = "../../test-data/genesis/celestia/chain_state.json";
+// Add config and genesis for Cyferio
+#[cfg(all(feature = "cyferio_da", not(feature = "mock_da"), not(feature = "celestia_da")))]
+const DEFAULT_CONFIG_PATH: &str = "../../cyferio_rollup_config.toml";
+#[cfg(all(feature = "cyferio_da", not(feature = "mock_da"), not(feature = "celestia_da")))]
+const DEFAULT_GENESIS_PATH: &str = "../../test-data/genesis/cyferio/";
+#[cfg(all(feature = "cyferio_da", not(feature = "mock_da"), not(feature = "celestia_da")))]
+const DEFAULT_KERNEL_GENESIS_PATH: &str = "../../test-data/genesis/cyferio/chain_state.json";
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -193,39 +178,6 @@ async fn new_rollup(
         .await
 }
 
-#[cfg(all(feature = "celestia_da", not(feature = "mock_da")))]
-async fn new_rollup(
-    rt_genesis_paths: &GenesisPaths,
-    kernel_genesis_paths: &BasicKernelGenesisPaths,
-    rollup_config_path: &str,
-    prover_config: Option<RollupProverConfig>,
-) -> Result<Rollup<CelestiaRollup<Native>, Native>, anyhow::Error> {
-    tracing::info!(
-        "Starting Celestia rollup with config {}",
-        rollup_config_path
-    );
-
-    let rollup_config: RollupConfig<sov_modules_api::Address<sha2::Sha256>, CelestiaConfig> =
-        from_toml_path(rollup_config_path).context("Failed to read rollup configuration")?;
-
-    let kernel_genesis = BasicKernelGenesisConfig {
-        chain_state: serde_json::from_str(
-            &std::fs::read_to_string(&kernel_genesis_paths.chain_state)
-                .context("Failed to read chain state")?,
-        )?,
-    };
-
-    let celestia_rollup = CelestiaRollup::default();
-    celestia_rollup
-        .create_new_rollup(
-            rt_genesis_paths,
-            kernel_genesis,
-            rollup_config,
-            prover_config,
-        )
-        .await
-}
-
 #[cfg(all(feature = "sui_da", not(feature = "mock_da")))]
 async fn new_rollup(
     rt_genesis_paths: &GenesisPaths,
@@ -249,6 +201,36 @@ async fn new_rollup(
 
     let sui_rollup = SuiRollup::default();
     sui_rollup
+        .create_new_rollup(
+            rt_genesis_paths,
+            kernel_genesis,
+            rollup_config,
+            prover_config,
+        )
+        .await
+}
+
+#[cfg(all(feature = "cyferio_da", not(feature = "mock_da"), not(feature = "celestia_da")))]
+async fn new_rollup(
+    rt_genesis_paths: &GenesisPaths,
+    kernel_genesis_paths: &BasicKernelGenesisPaths,
+    rollup_config_path: &str,
+    prover_config: Option<RollupProverConfig>,
+) -> Result<Rollup<CyferioRollup<Native>, Native>, anyhow::Error> {
+    tracing::info!("Starting Cyferio rollup with config {}", rollup_config_path);
+
+    let rollup_config: RollupConfig<sov_modules_api::Address<sha2::Sha256>, CyferioConfig> =
+        from_toml_path(rollup_config_path).context("Failed to read rollup configuration")?;
+
+    let kernel_genesis = BasicKernelGenesisConfig {
+        chain_state: serde_json::from_str(
+            &std::fs::read_to_string(&kernel_genesis_paths.chain_state)
+                .context("Failed to read chain state")?,
+        )?,
+    };
+
+    let cyferio_rollup = CyferioRollup::default();
+    cyferio_rollup
         .create_new_rollup(
             rt_genesis_paths,
             kernel_genesis,

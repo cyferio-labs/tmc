@@ -1,18 +1,14 @@
 #![deny(missing_docs)]
-//! StarterRollup provides a minimal self-contained rollup implementation
+//! CyferioRollup provides a rollup implementation using Cyferio as the DA layer
 
 use anyhow::Error;
 use async_trait::async_trait;
+use sov_cyferio_hub::service::CyferioConfig;
+use sov_cyferio_hub::service::DaProvider;
+use sov_cyferio_hub::spec::CyferioDaLayerSpec;
 use sov_db::ledger_db::LedgerDb;
 use sov_db::storage_manager::NativeStorageManager;
 use sov_kernels::basic::BasicKernel;
-
-// use sov_mock_da::storable::service::StorableMockDaService;
-// use sov_mock_da::{MockDaConfig, MockDaSpec};
-//
-use sov_sui_da::service::{DaProvider, SuiConfig};
-use sov_sui_da::spec::SuiDaLayerSpec;
-
 use sov_mock_zkvm::{MockCodeCommitment, MockZkVerifier, MockZkvm};
 use sov_modules_api::default_spec::DefaultSpec;
 use sov_modules_api::higher_kinded_types::Generic;
@@ -35,36 +31,36 @@ use stf_starter::authentication::ModAuth;
 use stf_starter::Runtime;
 use tokio::sync::watch::Receiver;
 
-/// Rollup with [`MockDaService`].
+/// Rollup with [`CyferioService`].
 #[derive(Default)]
-pub struct SuiRollup<M> {
+pub struct CyferioRollup<M> {
     phantom: std::marker::PhantomData<M>,
 }
 
 /// This is the place, where all the rollup components come together, and
 /// they can be easily swapped with alternative implementations as needed.
 #[async_trait]
-impl<M: ExecutionMode> RollupBlueprint<M> for SuiRollup<M>
+impl<M: ExecutionMode> RollupBlueprint<M> for CyferioRollup<M>
 where
     DefaultSpec<Risc0Verifier, MockZkVerifier, M>: PluggableSpec,
 {
     type Spec = DefaultSpec<Risc0Verifier, MockZkVerifier, M>;
-    type DaSpec = SuiDaLayerSpec;
+    type DaSpec = CyferioDaLayerSpec;
     type Runtime = Runtime<Self::Spec, Self::DaSpec>;
     type Kernel = BasicKernel<Self::Spec, Self::DaSpec>;
 }
 
 #[async_trait]
-impl FullNodeBlueprint<Native> for SuiRollup<Native> {
+impl FullNodeBlueprint<Native> for CyferioRollup<Native> {
     type DaService = DaServiceWithRetries<DaProvider>;
-    type DaConfig = SuiConfig;
+    type DaConfig = CyferioConfig;
     /// Inner Zkvm representing the rollup circuit
     type InnerZkvmHost = Risc0Host<'static>;
     /// Outer Zkvm representing the circuit verifier for recursion
     type OuterZkvmHost = MockZkvm;
     /// Manager for the native storage lifecycle.
     type StorageManager = NativeStorageManager<
-        SuiDaLayerSpec,
+        CyferioDaLayerSpec,
         ProverStorage<DefaultStorageSpec<<<Self::Spec as Spec>::CryptoSpec as CryptoSpec>::Hasher>>,
     >;
     /// Prover service.
@@ -78,8 +74,8 @@ impl FullNodeBlueprint<Native> for SuiRollup<Native> {
         StfBlueprint<
             <Self::Spec as Generic>::With<Zk>,
             Self::DaSpec,
-            <SuiRollup<Zk> as RollupBlueprint<Zk>>::Runtime,
-            <SuiRollup<Zk> as RollupBlueprint<Zk>>::Kernel,
+            <CyferioRollup<Zk> as RollupBlueprint<Zk>>::Runtime,
+            <CyferioRollup<Zk> as RollupBlueprint<Zk>>::Kernel,
         >,
     >;
 
@@ -112,7 +108,10 @@ impl FullNodeBlueprint<Native> for SuiRollup<Native> {
         &self,
         rollup_config: &RollupConfig<<Self::Spec as Spec>::Address, Self::DaConfig>,
     ) -> Self::DaService {
-        DaServiceWithRetries::new_fast(DaProvider::from_config(rollup_config.da.clone()).await)
+        let da_provider = DaProvider::from_config(rollup_config.da.clone())
+            .await
+            .expect("Failed to create DaProvider");
+        DaServiceWithRetries::new_fast(da_provider)
     }
 
     async fn create_prover_service(
@@ -147,4 +146,4 @@ impl FullNodeBlueprint<Native> for SuiRollup<Native> {
     }
 }
 
-impl sov_modules_rollup_blueprint::WalletBlueprint<Native> for SuiRollup<Native> {}
+impl sov_modules_rollup_blueprint::WalletBlueprint<Native> for CyferioRollup<Native> {}
