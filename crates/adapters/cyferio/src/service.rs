@@ -7,18 +7,18 @@ use crate::spec::transaction::CyferioBlobTransaction;
 use crate::spec::CyferioDaLayerSpec;
 use crate::verifier::CyferioDaVerifier;
 use anyhow::Error;
+use async_stream::try_stream;
 use async_trait::async_trait;
-use futures::stream::BoxStream;
-use futures::StreamExt;
+use futures::stream::{BoxStream, Stream, StreamExt};
 use parking_lot::Mutex;
 use sov_rollup_interface::da::{DaBlobHash, DaSpec, RelevantBlobs, RelevantProofs};
 use sov_rollup_interface::services::da::{DaService, MaybeRetryable};
-use subxt::config::Header;
 use std::collections::HashSet;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use subxt::backend::legacy::rpc_methods::BlockNumber;
 use subxt::backend::{legacy::LegacyRpcMethods, rpc::RpcClient};
+use subxt::config::Header;
 use subxt::{OnlineClient, SubstrateConfig};
 use subxt_signer::sr25519::dev;
 use tokio::time::{sleep, Duration};
@@ -42,6 +42,7 @@ pub struct DaProvider {
     last_processed_block: Arc<AtomicU64>,
     processed_blocks: Arc<Mutex<HashSet<u64>>>,
     last_processed_height: Arc<AtomicU64>,
+    latest_known_height: Arc<AtomicU64>,
 }
 
 impl DaProvider {
@@ -56,6 +57,7 @@ impl DaProvider {
             last_processed_block: Arc::new(AtomicU64::new(0)),
             processed_blocks: Arc::new(Mutex::new(HashSet::new())),
             last_processed_height: Arc::new(AtomicU64::new(0)),
+            latest_known_height: Arc::new(AtomicU64::new(0)),
         })
     }
 
@@ -68,14 +70,23 @@ impl DaProvider {
             .map_err(|e| MaybeRetryable::Transient(Error::from(e)))?;
         let rpc = LegacyRpcMethods::<StatemintConfig>::new(rpc_client.clone());
 
-        Ok(Self {
+        let mut provider = Self {
             rpc_client,
             client: Arc::new(client),
             rpc: Arc::new(rpc),
             last_processed_block: Arc::new(AtomicU64::new(0)),
             processed_blocks: Arc::new(Mutex::new(HashSet::new())),
             last_processed_height: Arc::new(AtomicU64::new(0)),
-        })
+            latest_known_height: Arc::new(AtomicU64::new(0)),
+        };
+
+        provider.update_latest_height().await?;
+        println!(
+            "Initial latest height: {}",
+            provider.latest_known_height.load(Ordering::SeqCst)
+        );
+
+        Ok(provider)
     }
 
     async fn wait_for_block(&self, height: u64) -> Result<CyferioBlock, MaybeRetryable<Error>> {
@@ -86,9 +97,7 @@ impl DaProvider {
         loop {
             match self.get_block_inner(height).await {
                 Ok(block) => return Ok(block),
-                Err(MaybeRetryable::Transient(e))
-                    if e.to_string().contains("Block already processed") =>
-                {
+                Err(MaybeRetryable::Transient(e)) => {
                     if retries >= max_retries {
                         return Err(MaybeRetryable::Transient(Error::msg(
                             "Max retries reached while waiting for new block",
@@ -103,11 +112,14 @@ impl DaProvider {
     }
 
     async fn get_block_inner(&self, height: u64) -> Result<CyferioBlock, MaybeRetryable<Error>> {
+        self.check_and_reset_state().await?;
+
         let last_processed = self.last_processed_height.load(Ordering::SeqCst);
         if height <= last_processed {
-            return Err(MaybeRetryable::Transient(Error::msg(
-                "Block already processed",
-            )));
+            return Err(MaybeRetryable::Transient(Error::msg(format!(
+                "Block at height {} already processed",
+                height
+            ))));
         }
 
         {
@@ -126,27 +138,44 @@ impl DaProvider {
             println!("Warning: Processing a block with height {} less than or equal to last processed height {}", height, last_processed);
         }
 
+        let latest_height = self
+            .rpc
+            .chain_get_header(None)
+            .await
+            .map_err(|e| MaybeRetryable::Transient(Error::from(e)))?
+            .map(|header| header.number as u64) // Convert to u64
+            .unwrap_or(0);
+
+        if height > latest_height {
+            return Err(MaybeRetryable::Transient(Error::msg(format!(
+                "Requested height {} exceeds latest height {}",
+                height, latest_height
+            ))));
+        }
+
         let current_hash = self
             .rpc
             .chain_get_block_hash(Some(BlockNumber::Number(height)))
             .await
-            .map_err(|e| MaybeRetryable::Transient(Error::from(e)))?;
+            .map_err(|e| MaybeRetryable::Transient(Error::from(e)))?
+            .ok_or_else(|| MaybeRetryable::Transient(Error::msg("Block hash not found")))?;
 
         println!("current_hash: {:?}", current_hash);
         let block_detail = self
             .rpc
-            .chain_get_block(current_hash)
+            .chain_get_block(Some(current_hash))
             .await
             .map_err(|e| MaybeRetryable::Transient(Error::from(e)))?;
         match block_detail {
             Some(block) => {
                 let header = block.block.header;
                 let parent_hash = header.parent_hash;
-                let state_root = header.hash();
+                let state_root = header.state_root;
                 let extrinsics_root = header.extrinsics_root;
                 let number = header.number;
                 let digest = header.digest.clone();
                 let cyferio_header = CyferioHeader::new(
+                    CyferioHash::from(current_hash),
                     number,
                     CyferioHash::from(parent_hash.0),
                     CyferioHash::from(state_root.0),
@@ -169,6 +198,120 @@ impl DaProvider {
             }
             None => Err(MaybeRetryable::Transient(Error::msg("Block not found"))),
         }
+    }
+
+    async fn get_next_block(&self) -> Result<CyferioBlock, MaybeRetryable<Error>> {
+        let mut current_height = self.last_processed_height.load(Ordering::SeqCst);
+
+        loop {
+            current_height += 1;
+            self.update_latest_height().await?;
+            let latest_height = self.latest_known_height.load(Ordering::SeqCst);
+
+            println!(
+                "Attempting to get block at height: {}, Latest known height: {}",
+                current_height, latest_height
+            );
+
+            if current_height > latest_height {
+                println!(
+                    "Waiting for new block. Current height: {}, Latest height: {}",
+                    current_height, latest_height
+                );
+                tokio::time::sleep(Duration::from_secs(1)).await;
+                continue;
+            }
+
+            // 检查是否已处理过此高度的块
+            {
+                let processed_blocks = self.processed_blocks.lock();
+                if processed_blocks.contains(&current_height) {
+                    println!(
+                        "Block at height {} already processed, moving to next",
+                        current_height
+                    );
+                    continue;
+                }
+            }
+
+            match self.get_block_inner(current_height).await {
+                Ok(block) => {
+                    println!("Successfully processed block at height: {}", current_height);
+                    self.last_processed_height
+                        .store(current_height, Ordering::SeqCst);
+
+                    // 将处理过的块高度添加到集合中
+                    {
+                        let mut processed_blocks = self.processed_blocks.lock();
+                        processed_blocks.insert(current_height);
+                    }
+
+                    return Ok(block);
+                }
+                Err(MaybeRetryable::Transient(e)) => {
+                    println!(
+                        "Error processing block at height {}: {:?}",
+                        current_height, e
+                    );
+                    // 如果是暂时性错误，我们可以继续尝试下一个块
+                    continue;
+                }
+                Err(e) => {
+                    println!("Unexpected error at height {}: {:?}", current_height, e);
+                    return Err(e);
+                }
+            }
+        }
+    }
+
+    // 添加一个新方法来清理旧的处理记录
+    fn clean_old_processed_blocks(&self, current_height: u64) {
+        let mut processed_blocks = self.processed_blocks.lock();
+        processed_blocks.retain(|&height| height > current_height - 100); // 保留最近100个块的记录
+    }
+
+    // 在 update_latest_height 方法中添加清理逻辑
+    async fn update_latest_height(&self) -> Result<(), MaybeRetryable<Error>> {
+        let latest_height = self
+            .rpc
+            .chain_get_header(None)
+            .await
+            .map_err(|e| MaybeRetryable::Transient(Error::from(e)))?
+            .map(|header| header.number as u64)
+            .unwrap_or(0);
+
+        let previous_height = self
+            .latest_known_height
+            .swap(latest_height, Ordering::SeqCst);
+        println!(
+            "Updated latest height from {} to {}",
+            previous_height, latest_height
+        );
+
+        // 清理旧的处理记录
+        self.clean_old_processed_blocks(latest_height);
+
+        Ok(())
+    }
+
+    async fn check_and_reset_state(&self) -> Result<(), MaybeRetryable<Error>> {
+        let latest_height = self
+            .rpc
+            .chain_get_header(None)
+            .await
+            .map_err(|e| MaybeRetryable::Transient(Error::from(e)))?
+            .map(|header| header.number as u64)
+            .unwrap_or(0);
+
+        let last_processed = self.last_processed_height.load(Ordering::SeqCst);
+
+        if latest_height < last_processed {
+            println!("Detected chain reset. Resetting internal state.");
+            self.last_processed_height.store(0, Ordering::SeqCst);
+            self.processed_blocks.lock().clear();
+        }
+
+        Ok(())
     }
 }
 
@@ -208,6 +351,7 @@ impl DaService for DaProvider {
                 let number = header.number;
                 let digest = header.digest.clone();
                 let cyferio_header = CyferioHeader::new(
+                    CyferioHash::from(header.hash()),
                     number,
                     CyferioHash::from(parent_hash.0),
                     CyferioHash::from(state_root.0),
@@ -221,30 +365,14 @@ impl DaService for DaProvider {
     }
 
     async fn subscribe_finalized_header(&self) -> Result<Self::HeaderStream, Self::Error> {
-        let last_processed_block = self.last_processed_block.clone();
-        Ok(self
-            .client
-            .blocks()
-            .subscribe_finalized()
-            .await
-            .map_err(|e| MaybeRetryable::Transient(Error::from(e)))?
-            .filter_map(move |block_res| {
-                futures::future::ready(match block_res {
-                    Ok(block) => {
-                        let header = block.header();
-                        let number = header.number;
-                        let last_processed = last_processed_block.load(Ordering::SeqCst);
-                        if u64::from(number) > last_processed {
-                            last_processed_block.store(u64::from(number), Ordering::SeqCst);
-                            Some(Ok(CyferioHeader::from(header)))
-                        } else {
-                            None
-                        }
-                    }
-                    Err(e) => Some(Err(MaybeRetryable::Transient(Error::from(e)))),
-                })
-            })
-            .boxed())
+        let provider = self.clone();
+        Ok(Box::pin(try_stream! {
+            loop {
+                provider.update_latest_height().await?;
+                let block = provider.get_next_block().await?;
+                yield block.header;
+            }
+        }))
     }
 
     async fn get_head_block_header(
@@ -256,7 +384,8 @@ impl DaService for DaProvider {
             .at_latest()
             .await
             .map_err(|e| MaybeRetryable::Transient(Error::from(e)))?;
-        Ok(CyferioHeader::from(latest_block.header()))
+        let header = latest_block.header();
+        Ok(CyferioHeader::from((header, header.hash())))
     }
 
     fn extract_relevant_blobs(

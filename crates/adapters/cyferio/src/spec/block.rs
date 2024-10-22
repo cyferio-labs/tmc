@@ -51,7 +51,7 @@ impl SlotData for CyferioBlock {
     type Cond = CyferioValidityCond;
 
     fn hash(&self) -> [u8; 32] {
-        self.header.state_root.into()
+        *self.header.hash.inner()
     }
 
     fn header(&self) -> &Self::BlockHeader {

@@ -71,9 +71,14 @@ impl From<CyferioHash> for [u8; 32] {
     }
 }
 
-// 如果你想自定义 Default 实现，可以手动实现如下：
-// impl Default for CyferioHash {
-//     fn default() -> Self {
-//         CyferioHash(H256::default())
-//     }
-// }
+impl CyferioHash {
+    pub fn inner(&self) -> &[u8; 32] {
+        self.0.as_fixed_bytes()
+    }
+}
+
+impl From<Option<H256>> for CyferioHash {
+    fn from(opt_hash: Option<H256>) -> Self {
+        opt_hash.map(CyferioHash).unwrap_or_default()
+    }
+}
