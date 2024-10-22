@@ -17,6 +17,7 @@ codec = { package = "parity-scale-codec", version = "3.0.0", default-features = 
 ], optional = true }
 derive_more = "0.99.17"
 sha2 = "0.10.6"
+parking_lot = "0.12.1"
 
 # Convenience
 tokio = { version = "1.35", features = [
