@@ -1,9 +1,10 @@
 use super::hash::CyferioHash;
 use serde::{Deserialize, Serialize};
 use sov_rollup_interface::da::BlockHeaderTrait;
-use subxt::blocks::Block;
 use subxt::config::substrate::Digest;
-use codec::Decode;
+use subxt_core::config::substrate::SubstrateHeader;
+use subxt_core::config::substrate::BlakeTwo256;
+
 const KATE_START_TIME: i64 = 1686066440;
 const KATE_SECONDS_PER_BLOCK: i64 = 20;
 
@@ -17,7 +18,6 @@ pub struct CyferioHeader {
     pub state_root: CyferioHash,
     pub extrinsics_root: CyferioHash,
     pub digest: Digest,
-    pub timestamp: u64,
 }
 
 impl CyferioHeader {
@@ -27,7 +27,6 @@ impl CyferioHeader {
         state_root: CyferioHash,
         extrinsics_root: CyferioHash,
         digest: Digest,
-        timestamp: u64,
     ) -> Self {
         Self {
             number,
@@ -35,7 +34,6 @@ impl CyferioHeader {
             state_root,
             extrinsics_root,
             digest,
-            timestamp,
         }
     }
 }
@@ -58,7 +56,7 @@ impl BlockHeaderTrait for CyferioHeader {
     fn time(&self) -> sov_rollup_interface::da::Time {
         sov_rollup_interface::da::Time::from_secs(
             KATE_SECONDS_PER_BLOCK
-                .saturating_mul(self.timestamp as i64)
+                .saturating_mul(self.number as i64)
                 .saturating_add(KATE_START_TIME),
         )
     }
@@ -72,41 +70,20 @@ impl Default for CyferioHeader {
             state_root: CyferioHash::default(),
             extrinsics_root: CyferioHash::default(),
             digest: Digest::default(),
-            timestamp: 0,
-            // 可以根据需要设置其他默认值
         }
     }
 }
 
-// impl TryFrom<Block<substrate::Header, substrate::UncheckedExtrinsic>> for CyferioHeader {
-//     type Error = anyhow::Error;
 
-//     fn try_from(block: Block<substrate::Header, substrate::UncheckedExtrinsic>) -> Result<Self, Self::Error> {
-//         let header = block.header();
-//         let parent_hash = CyferioHash::from(header.parent_hash.0);
-//         let state_root = CyferioHash::from(header.state_root.0);
-//         let extrinsics_root = CyferioHash::from(header.extrinsics_root.0);
-//         let number = header.number;
-//         let digest = header.digest.clone();
-
-//         // Extract timestamp from extrinsics
-//         let mut timestamp: u64 = 0;
-//         for ext in block.extrinsics() {
-//             if let Ok(call) = substrate::Call::decode(&mut ext.as_ref()) {
-//                 if let substrate::Call::Timestamp(substrate::timestamp::Call::set { now }) = call {
-//                     timestamp = now;
-//                     break;
-//                 }
-//             }
-//         }
-
-//         Ok(CyferioHeader::new(
-//             number,
-//             parent_hash,
-//             state_root,
-//             extrinsics_root,
-//             digest,
-//             timestamp,
-//         ))
-//     }
-// }
+#[cfg(feature = "native")]
+impl From<&SubstrateHeader<u32, BlakeTwo256>> for CyferioHeader {
+    fn from(header: &SubstrateHeader<u32, BlakeTwo256>) -> Self {
+        CyferioHeader::new(
+            header.number,
+            CyferioHash::from(header.parent_hash.0),
+            CyferioHash::from(header.state_root.0),
+            CyferioHash::from(header.extrinsics_root.0),
+            header.digest.clone(),
+        )
+    }
+}

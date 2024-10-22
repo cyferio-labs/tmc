@@ -1,4 +1,3 @@
-
 use bytes::Bytes;
 use serde::{Deserialize, Serialize};
 use sov_rollup_interface::da::{BlobReaderTrait, CountedBufReader};
@@ -37,5 +36,15 @@ impl BlobReaderTrait for CyferioBlobTransaction {
     fn advance(&mut self, num_bytes: usize) -> &[u8] {
         self.blob.advance(num_bytes);
         self.verified_data()
+    }
+}
+
+impl From<Vec<u8>> for CyferioBlobTransaction {
+    fn from(bytes: Vec<u8>) -> Self {
+        CyferioBlobTransaction {
+            blob: CountedBufReader::new(Bytes::from(bytes)),
+            hash: CyferioHash::default(),
+            sender: CyferioAddress::default(),
+        }
     }
 }

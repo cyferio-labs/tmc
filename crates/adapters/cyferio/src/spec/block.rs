@@ -8,6 +8,7 @@ use sov_rollup_interface::services::da::SlotData;
 #[derive(Serialize, Deserialize, PartialEq, Debug, Clone)]
 pub struct CyferioBlock {
     pub header: CyferioHeader,
+    pub transactions: Vec<CyferioBlobTransaction>,
     pub validity_cond: CyferioValidityCond,
     pub batch_blobs: Vec<CyferioBlobTransaction>,
     pub proof_blobs: Vec<CyferioBlobTransaction>,
@@ -34,9 +35,10 @@ impl CyferioBlock {
         }
     }
 
-    pub fn new(header: CyferioHeader) -> Self {
+    pub fn new(header: CyferioHeader, transactions: Vec<CyferioBlobTransaction>) -> Self {
         Self {
             header,
+            transactions,
             validity_cond: Default::default(),
             batch_blobs: Vec::new(),
             proof_blobs: Vec::new(),
@@ -65,6 +67,7 @@ impl Default for CyferioBlock {
     fn default() -> Self {
         Self {
             header: Default::default(),
+            transactions: Vec::new(),
             validity_cond: Default::default(),
             batch_blobs: Vec::new(),
             proof_blobs: Vec::new(),

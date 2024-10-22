@@ -3,15 +3,17 @@ use crate::spec::address::CyferioAddress;
 use crate::spec::block::CyferioBlock;
 use crate::spec::hash::CyferioHash;
 use crate::spec::header::CyferioHeader;
+use crate::spec::transaction::CyferioBlobTransaction;
 use crate::spec::CyferioDaLayerSpec;
 use crate::verifier::CyferioDaVerifier;
 use anyhow::Error;
 use async_trait::async_trait;
-use codec::Decode;
 use futures::stream::BoxStream;
 use futures::StreamExt;
 use sov_rollup_interface::da::{DaBlobHash, DaSpec, RelevantBlobs, RelevantProofs};
 use sov_rollup_interface::services::da::{DaService, MaybeRetryable};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
 use subxt::backend::legacy::rpc_methods::BlockNumber;
 use subxt::backend::{legacy::LegacyRpcMethods, rpc::RpcClient};
 use subxt::{OnlineClient, SubstrateConfig};
@@ -30,30 +32,40 @@ pub struct CyferioConfig {
 
 #[derive(Clone)]
 pub struct DaProvider {
-    pub client: OnlineClient<StatemintConfig>,
+    pub rpc_client: RpcClient,
+    pub client: Arc<OnlineClient<StatemintConfig>>,
+    pub rpc: Arc<LegacyRpcMethods<StatemintConfig>>,
+    last_processed_block: Arc<AtomicU64>,
 }
 
 impl DaProvider {
     pub async fn from_config(config: CyferioConfig) -> Result<Self, Error> {
-        let client = OnlineClient::<StatemintConfig>::from_url(&config.node_url)
-            .await
-            .map_err(Error::from)?;
-        Ok(Self { client })
+        let rpc_client = RpcClient::from_url(&config.node_url).await?;
+        let client = OnlineClient::<StatemintConfig>::from_rpc_client(rpc_client.clone()).await?;
+        let rpc = LegacyRpcMethods::<StatemintConfig>::new(rpc_client.clone());
+        Ok(Self {
+            rpc_client,
+            client: Arc::new(client),
+            rpc: Arc::new(rpc),
+            last_processed_block: Arc::new(AtomicU64::new(0)),
+        })
     }
 
-    pub async fn new(config: CyferioConfig) -> Result<Self, Error> {
-        let client = OnlineClient::<StatemintConfig>::from_url(&config.node_url)
+    pub async fn new(config: CyferioConfig) -> Result<Self, MaybeRetryable<Error>> {
+        let rpc_client = RpcClient::from_url(&config.node_url)
             .await
-            .map_err(Error::from)?;
-        let provider = Self { client };
+            .map_err(|e| MaybeRetryable::Transient(Error::from(e)))?;
+        let client = OnlineClient::<StatemintConfig>::from_rpc_client(rpc_client.clone())
+            .await
+            .map_err(|e| MaybeRetryable::Transient(Error::from(e)))?;
+        let rpc = LegacyRpcMethods::<StatemintConfig>::new(rpc_client.clone());
 
-        Ok(provider)
-    }
-
-    async fn get_latest_block(&self) -> Result<CyferioBlock, Error> {
-        let block = self.client.blocks().at_latest().await?;
-        let _block_hash = block.hash();
-        Ok(CyferioBlock::default()) // Temporary placeholder
+        Ok(Self {
+            rpc_client,
+            client: Arc::new(client),
+            rpc: Arc::new(rpc),
+            last_processed_block: Arc::new(AtomicU64::new(0)),
+        })
     }
 }
 
@@ -67,20 +79,24 @@ impl DaService for DaProvider {
     type Fee = CyferioFee;
 
     async fn get_block_at(&self, height: u64) -> Result<Self::FilteredBlock, Self::Error> {
-        let rpc_client = RpcClient::from_url("ws://127.0.0.1:9944")
-            .await
-            .map_err(|e| MaybeRetryable::Transient(Error::from(e)))?;
-        let rpc = LegacyRpcMethods::<StatemintConfig>::new(rpc_client.clone());
-        // let api = OnlineClient::<StatemintConfig>::from_rpc_client(rpc_client.clone())
-        //     .await
-        //     .map_err(|e| MaybeRetryable::Transient(Error::from(e)))?;
+        let last_processed = self.last_processed_block.load(Ordering::SeqCst);
+        if height <= last_processed {
+            // Instead of returning an error, we can skip this block
+            println!("Skipping already processed block at height: {}", height);
+            return Err(MaybeRetryable::Transient(Error::msg(
+                "Block already processed",
+            )));
+        }
 
-        let current_hash = rpc
+        let current_hash = self
+            .rpc
             .chain_get_block_hash(Some(BlockNumber::Number(height)))
             .await
             .map_err(|e| MaybeRetryable::Transient(Error::from(e)))?;
 
-        let block_detail = rpc
+        println!("current_hash: {:?}", current_hash);
+        let block_detail = self
+            .rpc
             .chain_get_block(current_hash)
             .await
             .map_err(|e| MaybeRetryable::Transient(Error::from(e)))?;
@@ -92,29 +108,24 @@ impl DaService for DaProvider {
                 let extrinsics_root = header.extrinsics_root;
                 let number = header.number;
                 let digest = header.digest.clone();
-
-                // Extract timestamp from extrinsics
-                let mut timestamp: u64 = 0;
-                for ext in block.block.extrinsics.iter() {
-                    if let Ok(call) = substrate::Call::decode(&mut ext.as_ref()) {
-                        if let substrate::Call::Timestamp(substrate::timestamp::Call::set { now }) =
-                            call
-                        {
-                            timestamp = now;
-                            break;
-                        }
-                    }
-                }
-
                 let cyferio_header = CyferioHeader::new(
                     number,
                     CyferioHash::from(parent_hash.0),
                     CyferioHash::from(state_root.0),
                     CyferioHash::from(extrinsics_root.0),
                     digest,
-                    timestamp,
                 );
-                let cyferio_block = CyferioBlock::new(cyferio_header);
+                let transactions: Vec<CyferioBlobTransaction> = block
+                    .block
+                    .extrinsics
+                    .into_iter()
+                    .map(|extrinsic| CyferioBlobTransaction::from(extrinsic.0))
+                    .collect();
+                let cyferio_block = CyferioBlock::new(cyferio_header, transactions);
+
+                // Update last_processed_block only if the new height is greater
+                self.last_processed_block
+                    .fetch_max(height, Ordering::SeqCst);
                 Ok(cyferio_block)
             }
             None => Err(MaybeRetryable::Transient(Error::msg("Block not found"))),
@@ -124,17 +135,14 @@ impl DaService for DaProvider {
     async fn get_last_finalized_block_header(
         &self,
     ) -> Result<<Self::Spec as DaSpec>::BlockHeader, Self::Error> {
-        let rpc_client = RpcClient::from_url("ws://127.0.0.1:9944")
-            .await
-            .map_err(|e| MaybeRetryable::Transient(Error::from(e)))?;
-        let rpc = LegacyRpcMethods::<StatemintConfig>::new(rpc_client.clone());
-
-        let finalized_hash = rpc
+        let finalized_hash = self
+            .rpc
             .chain_get_finalized_head()
             .await
             .map_err(|e| MaybeRetryable::Transient(Error::from(e)))?;
 
-        let block_detail = rpc
+        let block_detail = self
+            .rpc
             .chain_get_block(Some(finalized_hash))
             .await
             .map_err(|e| MaybeRetryable::Transient(Error::from(e)))?;
@@ -146,27 +154,12 @@ impl DaService for DaProvider {
                 let extrinsics_root = header.extrinsics_root;
                 let number = header.number;
                 let digest = header.digest.clone();
-
-                // Extract timestamp from extrinsics
-                let mut timestamp: u64 = 0;
-                for ext in block.block.extrinsics.iter() {
-                    if let Ok(call) = substrate::Call::decode(&mut ext.as_ref()) {
-                        if let substrate::Call::Timestamp(substrate::timestamp::Call::set { now }) =
-                            call
-                        {
-                            timestamp = now;
-                            break;
-                        }
-                    }
-                }
-
                 let cyferio_header = CyferioHeader::new(
                     number,
                     CyferioHash::from(parent_hash.0),
                     CyferioHash::from(state_root.0),
                     CyferioHash::from(extrinsics_root.0),
                     digest,
-                    timestamp,
                 );
                 Ok(cyferio_header)
             }
@@ -175,36 +168,28 @@ impl DaService for DaProvider {
     }
 
     async fn subscribe_finalized_header(&self) -> Result<Self::HeaderStream, Self::Error> {
+        let last_processed_block = self.last_processed_block.clone();
         Ok(self
             .client
             .blocks()
             .subscribe_finalized()
             .await
             .map_err(|e| MaybeRetryable::Transient(Error::from(e)))?
-            .map(|block_res| {
-                block_res
-                    .map_err(|e| MaybeRetryable::Transient(Error::from(e)))
-                    .and_then(|block| {
+            .filter_map(move |block_res| {
+                futures::future::ready(match block_res {
+                    Ok(block) => {
                         let header = block.header();
-                        let parent_hash = header.parent_hash;
-                        let state_root = header.state_root;
-                        let extrinsics_root = header.extrinsics_root;
                         let number = header.number;
-                        let digest = header.digest.clone();
-
-                        // Extract timestamp from extrinsics
-                        let timestamp: u64 = 0;
-
-                        let cyferio_header = CyferioHeader::new(
-                            number,
-                            CyferioHash::from(parent_hash.0),
-                            CyferioHash::from(state_root.0),
-                            CyferioHash::from(extrinsics_root.0),
-                            digest,
-                            timestamp,
-                        );
-                        Ok(cyferio_header)
-                    })
+                        let last_processed = last_processed_block.load(Ordering::SeqCst);
+                        if u64::from(number) > last_processed {
+                            last_processed_block.store(u64::from(number), Ordering::SeqCst);
+                            Some(Ok(CyferioHeader::from(header)))
+                        } else {
+                            None
+                        }
+                    }
+                    Err(e) => Some(Err(MaybeRetryable::Transient(Error::from(e)))),
+                })
             })
             .boxed())
     }
@@ -212,54 +197,13 @@ impl DaService for DaProvider {
     async fn get_head_block_header(
         &self,
     ) -> Result<<Self::Spec as DaSpec>::BlockHeader, Self::Error> {
-        let rpc_client = RpcClient::from_url("ws://127.0.0.1:9944")
+        let node_client = self.client.clone();
+        let latest_block = node_client
+            .blocks()
+            .at_latest()
             .await
             .map_err(|e| MaybeRetryable::Transient(Error::from(e)))?;
-        let rpc = LegacyRpcMethods::<StatemintConfig>::new(rpc_client.clone());
-
-        let head_hash = rpc
-            .chain_get_finalized_head()
-            .await
-            .map_err(|e| MaybeRetryable::Transient(Error::from(e)))?;
-
-        let block_detail = rpc
-            .chain_get_block(Some(head_hash))
-            .await
-            .map_err(|e| MaybeRetryable::Transient(Error::from(e)))?;
-        match block_detail {
-            Some(block) => {
-                let header = block.block.header;
-                let parent_hash = header.parent_hash;
-                let state_root = header.state_root;
-                let extrinsics_root = header.extrinsics_root;
-                let number = header.number;
-                let digest = header.digest.clone();
-
-                // Extract timestamp from extrinsics
-                let mut timestamp: u64 = 0;
-                for ext in block.block.extrinsics.iter() {
-                    if let Ok(call) = substrate::Call::decode(&mut ext.as_ref()) {
-                        if let substrate::Call::Timestamp(substrate::timestamp::Call::set { now }) =
-                            call
-                        {
-                            timestamp = now;
-                            break;
-                        }
-                    }
-                }
-
-                let cyferio_header = CyferioHeader::new(
-                    number,
-                    CyferioHash::from(parent_hash.0),
-                    CyferioHash::from(state_root.0),
-                    CyferioHash::from(extrinsics_root.0),
-                    digest,
-                    timestamp,
-                );
-                Ok(cyferio_header)
-            }
-            None => Err(MaybeRetryable::Transient(Error::msg("Block not found"))),
-        }
+        Ok(CyferioHeader::from(latest_block.header()))
     }
 
     fn extract_relevant_blobs(

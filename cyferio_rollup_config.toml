@@ -50,13 +50,13 @@ sender_address = [
 #              Empty blocks can be produced with this option.
 #  - on_submit: new blocks are produced on submission of batch/blob.
 #              `block_time_ms` defines maximum waiting time for a new block
-#block_producing = "periodic"
-block_producing = "on_submit"
+block_producing = "periodic"
+# block_producing = "on_submit"
 
 # Block time depends on `block_producing`:
 # For `periodic` it defines how often new blocks will be produced, approximately.
 # For `on_submit` it defines max time service will wait for a new block.
-block_time_ms = 1_000
+block_time_ms = 90_000 
 
 [storage]
 # The path to the rollup's data directory. Paths that do not begin with `/` are interpreted as relative paths.
@@ -66,7 +66,7 @@ path = "../../rollup-starter-data"
 # any blocks before this height
 [runner]
 genesis_height = 1
-da_polling_interval_ms = 1000
+da_polling_interval_ms = 90_000
 
 [runner.rpc_config]
 bind_host = "127.0.0.1"
@@ -78,3 +78,6 @@ bind_port = 12346
 [proof_manager]
 aggregated_proof_block_jump = 1
 prover_address = "sov1pv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9skzctpv9stup8tx"
+
+[runner.sync_config]
+max_blocks_per_second = 1

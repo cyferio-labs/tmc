@@ -70,3 +70,9 @@ impl From<[u8; 32]> for CyferioAddress {
         Self(bytes)
     }
 }
+
+impl Default for CyferioAddress {
+    fn default() -> Self {
+        Self([0u8; 32])
+    }
+}
