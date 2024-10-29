@@ -5,7 +5,7 @@ edition = { workspace = true }
 resolver = "2"
 authors = { workspace = true }
 license = { workspace = true }
-homepage = "sovereign.xyz"
+homepage = "cyferio.com"
 publish = false
 
 [dependencies]
@@ -14,15 +14,22 @@ sov-state = { workspace = true }
 sov-accounts = { workspace = true }
 sov-nonces = { workspace = true }
 sov-bank = { workspace = true }
+sov-chain-state = { workspace = true }
+sov-blob-storage = { workspace = true }
 sov-prover-incentives = { workspace = true }
+sov-attester-incentives = { workspace = true }
 sov-sequencer-registry = { workspace = true }
 sov-mock-da = { workspace = true }
 sov-modules-stf-blueprint = { workspace = true }
-sov-stf-runner = { workspace = true }
 sov-sequencer = { workspace = true, optional = true }
 sov-rollup-interface = { workspace = true }
 sov-capabilities = { workspace = true }
-tracing = "0.1.37"
+sov-kernels = { workspace = true }
+sov-rollup-apis = { workspace = true, optional = true }
+
+tracing = { workspace = true }
+example-module = { workspace = true }
+strum = { workspace = true }
 
 anyhow = { workspace = true }
 serde = { workspace = true, features = ["derive", "rc"] }
@@ -35,16 +42,26 @@ tokio = { workspace = true, features = ["sync"], optional = true }
 [features]
 default = []
 native = [
-    "sov-modules-api/native",
-    "sov-accounts/native",
-    "sov-bank/native",
-    "sov-sequencer-registry/native",
-    "sov-prover-incentives/native",
-    "sov-mock-da/native",
-    "sov-modules-stf-blueprint/native",
-    "sov-stf-runner/native",
-    "jsonrpsee",
-    "sov-sequencer",
-    "clap",
-    "tokio",
+	"clap",
+	"jsonrpsee",
+	"sov-accounts/native",
+	"sov-attester-incentives/native",
+	"sov-bank/native",
+	"sov-capabilities/native",
+	"sov-chain-state/native",
+	"sov-blob-storage/native",
+	"sov-mock-da/native",
+	"sov-modules-api/native",
+	"sov-modules-stf-blueprint/native",
+	"sov-nonces/native",
+	"sov-prover-incentives/native",
+	"sov-rollup-interface/native",
+	"sov-state/native",
+	"sov-sequencer",
+	"sov-sequencer-registry/native",
+	"tokio",
+	"sov-capabilities/native",
+	"sov-state/native",
+	"example-module/native",
+	"sov-rollup-apis",
 ]

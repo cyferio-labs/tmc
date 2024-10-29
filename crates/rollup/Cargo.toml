@@ -20,9 +20,10 @@ sov-accounts = { workspace = true, features = ["native"] }
 sov-bank = { workspace = true, features = ["native"] }
 sov-ledger-apis = { workspace = true }
 sov-sequencer-registry = { workspace = true, features = ["native"] }
+sov-attester-incentives = { workspace = true, features = ["native"] }
 sov-modules-rollup-blueprint = { workspace = true }
 sov-modules-stf-blueprint = { workspace = true, features = ["native"] }
-sov-stf-runner = { workspace = true, features = ["native"] }
+sov-stf-runner = { workspace = true }
 sov-cli = { workspace = true }
 
 sov-db = { workspace = true }
@@ -30,7 +31,7 @@ sov-sequencer = { workspace = true }
 sov-rollup-interface = { workspace = true }
 sov-mock-da = { workspace = true, features = ["native"], optional = true }
 sov-celestia-adapter = { workspace = true, features = [
-    "native",
+  "native",
 ], optional = true }
 
 axum = { workspace = true }
@@ -54,7 +55,7 @@ sov-risc0-adapter = { workspace = true, features = ["native"] }
 # binary dependencies
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 tracing-panic = "0.1.2"
-bytes = "1.5.0"
+bytes = "1.7.2"
 rand = "0.8.5"
 
 [dev-dependencies]
@@ -64,7 +65,7 @@ sov-test-utils = { workspace = true }
 futures = { version = "0.3", default-features = false }
 
 [features]
-default = ["mock_da"]
+default = ["mock_da"]                  # set mock_da as the default feature
 mock_da = ["sov-mock-da"]
 celestia_da = ["sov-celestia-adapter"]
 

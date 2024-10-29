@@ -1,14 +1,16 @@
 use sha2::Sha256;
 use sov_cli::wallet_state::PrivateKeyAndAddress;
+use sov_sequencer::batch_builders::standard::StdBatchBuilderConfig;
+use sov_sequencer::BatchBuilderConfig;
 use std::net::SocketAddr;
 use std::path::Path;
 
-use sov_kernels::basic::{BasicKernelGenesisConfig, BasicKernelGenesisPaths};
 use sov_mock_da::MockDaConfig;
 use sov_modules_api::{Address, Spec};
 use sov_modules_rollup_blueprint::FullNodeBlueprint;
 use sov_rollup_starter::mock_rollup::MockRollup;
-use sov_stf_runner::RollupProverConfig;
+use sov_sequencer::SequencerConfig;
+use sov_stf_runner::processes::RollupProverConfig;
 use sov_stf_runner::{HttpServerConfig, ProofManagerConfig};
 use sov_stf_runner::{RollupConfig, RunnerConfig, StorageConfig};
 use std::str::FromStr;
@@ -21,12 +23,12 @@ pub async fn start_rollup(
     rpc_reporting_channel: oneshot::Sender<SocketAddr>,
     rest_reporting_channel: oneshot::Sender<SocketAddr>,
     rt_genesis_paths: GenesisPaths,
-    kernel_genesis_paths: BasicKernelGenesisPaths,
     rollup_prover_config: RollupProverConfig,
     da_config: MockDaConfig,
 ) {
     let temp_dir = tempfile::tempdir().unwrap();
     let temp_path = temp_dir.path();
+    let sequencer_address = da_config.sender_address;
 
     let rollup_config = RollupConfig {
         storage: StorageConfig {
@@ -35,14 +37,9 @@ pub async fn start_rollup(
         runner: RunnerConfig {
             genesis_height: 0,
             da_polling_interval_ms: 1000,
-            rpc_config: HttpServerConfig {
-                bind_host: "127.0.0.1".into(),
-                bind_port: 0,
-            },
-            axum_config: HttpServerConfig {
-                bind_host: "127.0.0.1".into(),
-                bind_port: 0,
-            },
+            rpc_config: HttpServerConfig::localhost_on_free_port(),
+            axum_config: HttpServerConfig::localhost_on_free_port(),
+            concurrent_sync_tasks: Some(1),
         },
         da: da_config,
         proof_manager: ProofManagerConfig {
@@ -50,25 +47,22 @@ pub async fn start_rollup(
             prover_address: Address::<Sha256>::from_str(PROVER_ADDRESS)
                 .expect("Prover address is not valid"),
         },
+        sequencer: SequencerConfig {
+            max_allowed_blocks_behind: 5,
+            automatic_batch_production: false,
+            da_address: sequencer_address,
+            batch_builder: BatchBuilderConfig::standard(StdBatchBuilderConfig {
+                mempool_max_txs_count: None,
+                max_batch_size_bytes: None,
+            }),
+            dropped_tx_ttl_secs: 0,
+        },
     };
 
     let mock_demo_rollup = MockRollup::default();
 
-    let kernel_genesis = BasicKernelGenesisConfig {
-        chain_state: serde_json::from_str(
-            &std::fs::read_to_string(&kernel_genesis_paths.chain_state)
-                .expect("Failed to read chain_state genesis config"),
-        )
-        .expect("Failed to parse chain_state genesis config"),
-    };
-
     let rollup = mock_demo_rollup
-        .create_new_rollup(
-            &rt_genesis_paths,
-            kernel_genesis,
-            rollup_config,
-            Some(rollup_prover_config),
-        )
+        .create_new_rollup(&rt_genesis_paths, rollup_config, Some(rollup_prover_config))
         .await
         .unwrap();
 

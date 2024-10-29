@@ -4,7 +4,8 @@ resolver = "2"
 
 members = [
     "crates/rollup",
-    "crates/stf"
+    "crates/stf",
+    "crates/example-module"
 ]
 
 [workspace.package]
@@ -16,30 +17,36 @@ publish = false
 rust-version = "1.73"
 
 [workspace.dependencies]
-sov-modules-api = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
-sov-state = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
 sov-accounts = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
-sov-nonces = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-attester-incentives = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-chain-state = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
 sov-bank = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
-sov-ledger-apis = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
-sov-prover-incentives = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
-sov-sequencer-registry = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
-sov-modules-stf-blueprint = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
-sov-modules-rollup-blueprint = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
-sov-stf-runner = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
-sov-db = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
-sov-sequencer = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
-sov-rollup-interface = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
-sov-risc0-adapter = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
-sov-mock-zkvm = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
-sov-first-read-last-write-cache = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
-sov-cli = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
-sov-mock-da = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
-sov-celestia-adapter = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
-sov-kernels = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-blob-storage = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
 sov-capabilities = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-celestia-adapter = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-cli = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-db = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-first-read-last-write-cache = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-kernels = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-ledger-apis = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-mock-da = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-mock-zkvm = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-modules-api = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-modules-rollup-blueprint = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-modules-stf-blueprint = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-nonces = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-prover-incentives = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-risc0-adapter = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-rollup-interface = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-sequencer = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-sequencer-registry = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-state = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-stf-runner = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
 sov-test-utils = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
+sov-rollup-apis = { git = "ssh://git@github.com/cyferio-labs/sovereign-sdk-wip.git", branch = "fix/update-cyferio-deps" }
 stf-starter = { path = "./crates/stf" }
+example-module = { path = "./crates/example-module" }
+strum = { version = "0.26.3", features = ["derive"] }
 
 axum = { version = "0.7", default-features = false }
 serde = { version = "1.0.192", features = ["derive", "rc"] }
@@ -59,4 +66,4 @@ tokio = { version = "1", features = ["full"] }
 tempfile = "3.5"
 jsonrpsee = { version = "0.24.2", features = ["jsonrpsee-types"] }
 
-risc0-build = "1.0.5"
+risc0-build = "1.1"
