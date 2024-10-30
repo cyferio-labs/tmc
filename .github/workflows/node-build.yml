@@ -67,6 +67,11 @@ jobs:
             tmux \
             httpie
 
+      # Configure git to use HTTPS instead of SSH
+      - name: Configure git
+        run: |
+          git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "ssh://git@github.com/"
+
       # Build node binary with mock_da feature (default)
       - name: Build node with mock_da
         run: |
