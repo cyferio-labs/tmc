@@ -24,6 +24,23 @@ jobs:
           version: "23.2"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
+      # Check if cargo is installed
+      - name: Check cargo installation
+        id: check-cargo
+        run: |
+          if ! command -v cargo &> /dev/null; then
+            echo "cargo_installed=false" >> $GITHUB_OUTPUT
+          else
+            echo "cargo_installed=true" >> $GITHUB_OUTPUT
+          fi
+
+      # Install Rust and Cargo if not present
+      - name: Install Rust and Cargo
+        if: steps.check-cargo.outputs.cargo_installed != 'true'
+        run: |
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source $HOME/.cargo/env
+
       # Install cargo-risczero (referenced from Makefile)
       - name: Install cargo-risczero
         uses: taiki-e/install-action@v2
@@ -33,6 +50,39 @@ jobs:
       # Install risc0-zkvm toolchain (based on Makefile)
       - name: Install risc0-zkvm toolchain
         run: make install-risczero
+
+      # Install dev packages from automation/roles/common/tasks/deps.yaml
+      - name: Install dev packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            pkg-config \
+            libudev-dev \
+            cmake \
+            libclang-dev \
+            libssl-dev \
+            gparted \
+            nload \
+            python3-pip \
+            net-tools \
+            logind \
+            curl \
+            git \
+            chrony \
+            htop \
+            acl \
+            tar \
+            wget \
+            aria2 \
+            clang \
+            jq \
+            make \
+            ncdu \
+            protobuf-compiler \
+            ninja-build \
+            tmux \
+            httpie
 
       # Build node binary with mock_da feature (default)
       - name: Build node with mock_da
