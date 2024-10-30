@@ -24,23 +24,6 @@ jobs:
           version: "23.2"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Check if cargo is installed
-      - name: Check cargo installation
-        id: check-cargo
-        run: |
-          if ! command -v cargo &> /dev/null; then
-            echo "cargo_installed=false" >> $GITHUB_OUTPUT
-          else
-            echo "cargo_installed=true" >> $GITHUB_OUTPUT
-          fi
-
-      # Install Rust and Cargo if not present
-      - name: Install Rust and Cargo
-        if: steps.check-cargo.outputs.cargo_installed != 'true'
-        run: |
-          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-          source $HOME/.cargo/env
-
       # Install cargo-risczero (referenced from Makefile)
       - name: Install cargo-risczero
         uses: taiki-e/install-action@v2
@@ -89,6 +72,8 @@ jobs:
         run: |
           cd crates/rollup
           cargo build --bin node
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     #   # Build node binary with celestia_da feature
     #   - name: Build node with celestia_da
@@ -97,3 +82,5 @@ jobs:
       # Run tests
       - name: Run tests
         run: cargo test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
