@@ -72,6 +72,15 @@ jobs:
         run: |
           git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "ssh://git@github.com/"
 
+      # Configure Cargo for private repository access
+      - name: Configure Cargo
+        run: |
+          mkdir -p ~/.cargo
+          echo '[net]' > ~/.cargo/config.toml
+          echo 'git-fetch-with-cli = true' >> ~/.cargo/config.toml
+          echo '[registries.crates-io]' >> ~/.cargo/config.toml
+          echo 'protocol = "sparse"' >> ~/.cargo/config.toml
+
       # Build node binary with mock_da feature (default)
       - name: Build node with mock_da
         run: |
@@ -79,6 +88,7 @@ jobs:
           cargo build --bin node
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CARGO_NET_GIT_FETCH_WITH_CLI: true
 
     #   # Build node binary with celestia_da feature
     #   - name: Build node with celestia_da
