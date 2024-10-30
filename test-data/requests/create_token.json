@@ -1,6 +1,5 @@
 {
-  "CreateToken": {
-    "salt": 11,
+  "create_token": {
     "token_name": "sov-test-token",
     "initial_balance": 1000000,
     "mint_to_address": "sov15vspj48hpttzyvxu8kzq5klhvaczcpyxn6z6k0hwpwtzs4a6wkvqwr57gc",

@@ -2,8 +2,7 @@
 //! This binary implements the verification logic for the rollup. This is the code that runs inside
 //! of the zkvm in order to generate proofs for the rollup.
 
-use sov_kernels::basic::BasicKernel;
-use sov_mock_da::MockDaVerifier;
+use sov_mock_da::{MockDaSpec, MockDaVerifier};
 pub use sov_mock_zkvm::{MockZkGuest, MockZkVerifier};
 use sov_modules_api::default_spec::DefaultSpec;
 use sov_modules_api::execution_mode::Zk;
@@ -40,14 +39,10 @@ pub fn main() {
     #[cfg(feature = "bench")]
     let start_cycles = risc0_zkvm_platform::syscall::sys_cycle_count();
 
-    let stf: StfBlueprint<
-        DefaultSpec<Risc0Verifier, MockZkVerifier, Zk>,
-        _,
-        Runtime<_, _>,
-        BasicKernel<_, _>,
-    > = StfBlueprint::new();
+    let stf: StfBlueprint<DefaultSpec<MockDaSpec, Risc0Verifier, MockZkVerifier, Zk>, Runtime<_>> =
+        StfBlueprint::new();
 
-    let stf_verifier = StfVerifier::<_, _, _, _, _, MockZkGuest>::new(stf, MockDaVerifier {});
+    let stf_verifier = StfVerifier::<_, _, _, _, MockZkGuest>::new(stf, MockDaVerifier {});
 
     stf_verifier
         .run_block(guest, storage)

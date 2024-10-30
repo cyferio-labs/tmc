@@ -12,8 +12,8 @@ use stf_starter::runtime::RuntimeSubcommand;
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
     StarterRollup::run_wallet::<
-        RuntimeSubcommand<FileNameArg, _, _>,
-        RuntimeSubcommand<JsonStringArg, _, _>,
+        RuntimeSubcommand<FileNameArg, _>,
+        RuntimeSubcommand<JsonStringArg, _>,
     >()
     .await
 }

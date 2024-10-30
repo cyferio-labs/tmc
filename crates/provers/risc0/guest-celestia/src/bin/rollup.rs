@@ -3,8 +3,8 @@
 #![no_main]
 
 use sov_celestia_adapter::types::Namespace;
+use sov_celestia_adapter::verifier::CelestiaSpec;
 use sov_celestia_adapter::verifier::CelestiaVerifier;
-use sov_kernels::basic::BasicKernel;
 use sov_mock_zkvm::{MockZkGuest, MockZkVerifier};
 use sov_modules_api::default_spec::DefaultSpec;
 use sov_modules_api::execution_mode::Zk;
@@ -25,13 +25,11 @@ pub fn main() {
     let guest = Risc0Guest::new();
     let storage = ZkStorage::new();
     let stf: StfBlueprint<
-        DefaultSpec<Risc0Verifier, MockZkVerifier, Zk>,
-        _,
-        Runtime<_, _>,
-        BasicKernel<_, _>,
+        DefaultSpec<CelestiaSpec, Risc0Verifier, MockZkVerifier, Zk>,
+        Runtime<_>,
     > = StfBlueprint::new();
 
-    let stf_verifier = StfVerifier::<_, _, _, _, Risc0Guest, MockZkGuest>::new(
+    let stf_verifier = StfVerifier::<_, _, _, Risc0Guest, MockZkGuest>::new(
         stf,
         CelestiaVerifier {
             rollup_batch_namespace: ROLLUP_BATCH_NAMESPACE,

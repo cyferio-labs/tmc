@@ -3,57 +3,60 @@
 //! - Before and after each transaction is executed.
 //! - At the beginning and end of each batch ("blob")
 //! - At the beginning and end of each slot (DA layer block)
+use super::runtime::Runtime;
+use sov_modules_api::hooks::KernelSlotHooks;
 use sov_modules_api::hooks::{ApplyBatchHooks, FinalizeHook, SlotHooks, TxHooks};
+use sov_modules_api::TxScratchpad;
 use sov_modules_api::{
-    BatchSequencerReceipt, BatchWithId, Spec, StateCheckpoint, StateReaderAndWriter, WorkingSet,
+    BatchSequencerReceipt, Spec, StateCheckpoint, StateReaderAndWriter, WorkingSet,
 };
 use sov_rollup_interface::da::DaSpec;
 use sov_state::namespaces::Accessory;
+use sov_state::Storage;
 
-use super::runtime::Runtime;
-
-impl<S: Spec, Da: DaSpec> TxHooks for Runtime<S, Da> {
+impl<S: Spec> TxHooks for Runtime<S> {
     type Spec = S;
     type TxState = WorkingSet<S>;
 }
 
-impl<S: Spec, Da: DaSpec> ApplyBatchHooks<Da> for Runtime<S, Da> {
+impl<S: Spec> ApplyBatchHooks for Runtime<S> {
     type Spec = S;
-    type BatchResult = BatchSequencerReceipt<Da>;
+    type BatchResult = BatchSequencerReceipt<S::Da>;
 
     fn begin_batch_hook(
         &self,
-        _batch: &BatchWithId,
-        _sender: &Da::Address,
-        _state_checkpoint: &mut StateCheckpoint<S>,
+        _sender: &<S::Da as DaSpec>::Address,
+        _state: &mut TxScratchpad<S::Storage>,
     ) -> anyhow::Result<()> {
         Ok(())
     }
 
-    fn end_batch_hook(&self, _result: &Self::BatchResult, _state: &mut StateCheckpoint<S>) {}
+    fn end_batch_hook(&self, _result: &Self::BatchResult, _state: &mut TxScratchpad<S::Storage>) {}
 }
 
-impl<S: Spec, Da: DaSpec> SlotHooks for Runtime<S, Da> {
+impl<S: Spec> SlotHooks for Runtime<S> {
     type Spec = S;
     fn begin_slot_hook(
         &self,
-        _pre_state_root: <Self::Spec as Spec>::VisibleHash,
-        _versioned_state_checkpoint: &mut sov_modules_api::VersionedStateReadWriter<
-            StateCheckpoint<Self::Spec>,
-        >,
+        _pre_state_root: &<<S as Spec>::Storage as Storage>::Root,
+        _versioned_working_set: &mut StateCheckpoint<S::Storage>,
     ) {
     }
 
-    fn end_slot_hook(&self, _state_checkpoint: &mut StateCheckpoint<S>) {}
+    fn end_slot_hook(&self, _state: &mut StateCheckpoint<S::Storage>) {}
 }
 
-impl<S: Spec, Da: DaSpec> FinalizeHook for Runtime<S, Da> {
+impl<S: Spec> FinalizeHook for Runtime<S> {
     type Spec = S;
 
     fn finalize_hook(
         &self,
-        _root_hash: S::VisibleHash,
+        _root_hash: &<<S as Spec>::Storage as Storage>::Root,
         _accessory_working_set: &mut impl StateReaderAndWriter<Accessory>,
     ) {
     }
+}
+
+impl<S: Spec> KernelSlotHooks for Runtime<S> {
+    type Spec = S;
 }

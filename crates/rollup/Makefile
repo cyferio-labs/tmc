@@ -31,6 +31,15 @@ JWT_TOKEN_PATH := $(CREDENTIALS_DIR)/$(KEY_NAME).jwt
 get_token := $(docker_compose) exec -it sequencer-0 celestia bridge auth admin --p2p.network "private"
 get_token_1 := $(docker_compose) exec -it sequencer-1 celestia bridge auth admin --p2p.network "private"
 
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+    SED = sed -i
+else ifeq ($(UNAME_S),Darwin)
+    SED = sed -i ''
+else
+    $(error Unsupported operating system: $(UNAME_S))
+endif
+
 # start the celestia network and generate a new config
 start:
 	@echo "Starting celestia docker compose..."
@@ -55,7 +64,7 @@ start:
 	done; \
 	echo "Token received: $$TOKEN";
 	@TOKEN=$$($(get_token) 2>/dev/null); \
-	sed -i '' 's/^\(celestia_rpc_auth_token = \)"[^"]*"/\1"'$$TOKEN'"/' $(CELESTIA_CONFIG); \
+	$(SED) 's/^\(celestia_rpc_auth_token = \)"[^"]*"/\1"'$$TOKEN'"/' $(CELESTIA_CONFIG); \
     echo "Celestia docker compose has started completed."; \
 
 # start the celestia network or attach to existing
@@ -89,6 +98,10 @@ clean-db:
 	rm -rf ../../rollup-starter-data
 	rm -rf mock_da.sqlite
 
+clean-wallet:
+	@echo "Going to remove wallet from~/.sov_cli_wallet/"
+	@@printf "!!! This can potentially remove the only source of private key. Are you sure? [y/N]: " && read ans && [ $${ans:-N} = y ] && rm -rf ~/.sov_cli_wallet/
+
 build-sov-cli:
 ifdef CELESTIA
 	cargo build --bin starter-cli-wallet --no-default-features --features celestia_da
@@ -96,22 +109,16 @@ else
 	cargo build --bin starter-cli-wallet
 endif
 
-set-rpc-url: build-sov-cli
-	$(SOV_CLI_REL_PATH) rpc set-url --rpc=http://127.0.0.1:12345 --rest-api=http://127.0.0.1:12346
 
-import-keys: build-sov-cli
-	$(SOV_CLI_REL_PATH) keys import --nickname DANGER__DO_NOT_USE_WITH_REAL_MONEY --path ../../test-data/keys/token_deployer_private_key.json
-
-
-test-generate-create-token-tx: build-sov-cli
+test-create-token: build-sov-cli
+	$(SOV_CLI_REL_PATH) node set-url http://127.0.0.1:12346
+	$(SOV_CLI_REL_PATH) keys import --skip-if-present --nickname DANGER__DO_NOT_USE_WITH_REAL_MONEY --path ../../test-data/keys/token_deployer_private_key.json
 	$(SOV_CLI_REL_PATH) transactions import from-file bank --chain-id 4321 --max-fee 100000000 --path ../../test-data/requests/create_token.json
-
-
-test-create-token: set-rpc-url test-generate-create-token-tx import-keys
-	$(SOV_CLI_REL_PATH) rpc submit-batch --wait-for-processing by-nickname DANGER__DO_NOT_USE_WITH_REAL_MONEY
+	@echo "Submitting a batch"
+	$(SOV_CLI_REL_PATH) node submit-batch --wait-for-processing by-nickname DANGER__DO_NOT_USE_WITH_REAL_MONEY
 	sleep 5
 
 
 test-bank-supply-of:
-	curl -sS -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"bank_supplyOf","params":{"token_id":"token_1rwrh8gn2py0dl4vv65twgctmlwck6esm2as9dftumcw89kqqn3nqrduss6"},"id":1}' http://127.0.0.1:12345
+	curl -sS -X POST -H "Content-Type: application/json" -d '{"jsonrpc":"2.0","method":"bank_supplyOf","params":{"token_id":"token_1nyl0e0yweragfsatygt24zmd8jrr2vqtvdfptzjhxkguz2xxx3vs0y07u7"},"id":1}' http://127.0.0.1:12345
 
