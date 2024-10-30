@@ -67,10 +67,14 @@ jobs:
             tmux \
             httpie
 
-      # Configure git to use HTTPS instead of SSH
-      - name: Configure git
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add GitHub to known_hosts
         run: |
-          git config --global url."https://${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "ssh://git@github.com/"
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
 
       # Configure Cargo for private repository access
       - name: Configure Cargo
