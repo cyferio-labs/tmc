@@ -1,0 +1,107 @@
+name: Node Binary Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on:
+      - ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+      
+      - name: Debug SSH and Git
+        run: |
+          echo "Testing SSH connection..."
+          ssh -vT git@github.com || true
+          
+          echo "Checking Git configuration..."
+          git config --list
+          
+          echo "Testing specific repository access..."
+          git ls-remote git@github.com:cyferio-labs/sovereign-sdk-wip.git || true
+
+
+      # Install Protoc (needed based on dependencies)
+      - name: Install Protoc
+        uses: arduino/setup-protoc@v2
+        with:
+          version: "23.2"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Install cargo-risczero (referenced from Makefile)
+      - name: Install cargo-risczero
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-risczero@1.0.5
+
+      # Install risc0-zkvm toolchain (based on Makefile)
+      - name: Install risc0-zkvm toolchain
+        run: make install-risczero
+
+      # Install dev packages from automation/roles/common/tasks/deps.yaml
+      - name: Install dev packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            pkg-config \
+            libudev-dev \
+            cmake \
+            libclang-dev \
+            libssl-dev \
+            gparted \
+            nload \
+            python3-pip \
+            net-tools \
+            logind \
+            curl \
+            git \
+            chrony \
+            htop \
+            acl \
+            tar \
+            wget \
+            aria2 \
+            clang \
+            jq \
+            make \
+            ncdu \
+            protobuf-compiler \
+            ninja-build \
+            tmux \
+            httpie
+
+      - name: Add GitHub to known_hosts
+        run: |
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+
+      # Build node binary with mock_da feature (default)
+      - name: Build node with mock_da
+        run: |
+          cd crates/rollup
+          cargo build --bin node
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CARGO_NET_GIT_FETCH_WITH_CLI: true
+
+    #   # Build node binary with celestia_da feature
+    #   - name: Build node with celestia_da
+    #     run: cargo build --bin node --no-default-features --features celestia_da
+
+      # Run tests
+      - name: Run tests
+        run: cargo test
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
