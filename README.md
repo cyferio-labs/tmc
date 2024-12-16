@@ -1,5 +1,8 @@
 # TMC (Trustless Modular Calculator)
 
+> [!CAUTION]
+> We have moved to [`Cyferio SDK`](https://github.com/cyferio-labs/cyferio-sdk). Please check it for the latest upgrade.
+
 > [!IMPORTANT]  
 > To enable FHE modules, please visit [`fhe-module`](https://github.com/cyferio-labs/tmc/tree/fhe-modules) branch
 
